@@ -1,6 +1,6 @@
 {
-  "name": "@ali/appflow-chat",
-  "version": "0.0.1",
+  "name": "@alicloud/appflow-chat",
+  "version": "0.0.1-beta.1",
   "description": "Appflow-Chat AI聊天机器人组件库，提供聊天服务和UI组件",
   "type": "module",
   "main": "./dist/appflow-chat.cjs.js",
@@ -81,10 +81,7 @@
   ],
   "author": "Appflow Team",
   "license": "MIT",
-  "publishConfig": {
-    "registry": "https://registry.anpm.alibaba-inc.com",
-    "access": "public"
-  },
+  "repository": "git@github.com:aliyun/appflow-chatbot.git",
   "overrides": {
     "mdast-util-gfm-autolink-literal": "2.0.0"
   }
