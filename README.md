@@ -9,11 +9,7 @@ AI chatbot component library providing chat services and UI components.
 ### Basic Installation
 
 ```bash
-# Alibaba Internal
-tnpm install @ali/appflow-chat
-
-# NPM Official
-npm install appflow-chat
+npm install @alicloud/appflow-chat
 ```
 
 ### Install Peer Dependencies
@@ -35,7 +31,7 @@ npm install react react-dom antd
 ### 1. Initialize Service
 
 ```typescript
-import { chatService } from '@ali/appflow-chat';
+import { chatService } from '@alicloud/appflow-chat';
 
 // Initialize
 const config = await chatService.setup({
@@ -67,7 +63,7 @@ chatService.chat({ text: 'Hello' })
 ### 3. Use UI Components
 
 ```tsx
-import { MessageBubble, RichMessageBubble } from '@ali/appflow-chat';
+import { MessageBubble, RichMessageBubble } from '@alicloud/appflow-chat';
 
 // Simple message bubble
 <MessageBubble 
@@ -87,7 +83,7 @@ import { MessageBubble, RichMessageBubble } from '@ali/appflow-chat';
 ### 4. Use MarkdownView Component
 
 ```tsx
-import { MarkdownView } from '@ali/appflow-chat';
+import { MarkdownView } from '@alicloud/appflow-chat';
 
 // Render Markdown content
 <MarkdownView 
@@ -99,7 +95,7 @@ import { MarkdownView } from '@ali/appflow-chat';
 ### 5. Use Core Components (Advanced Customization)
 
 ```tsx
-import { BubbleContent, SourceContent } from '@ali/appflow-chat';
+import { BubbleContent, SourceContent } from '@alicloud/appflow-chat';
 
 // Custom message bubble
 <div className="my-bubble">

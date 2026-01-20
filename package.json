@@ -1,6 +1,6 @@
 {
   "name": "@alicloud/appflow-chat",
-  "version": "0.0.1-beta.1",
+  "version": "0.0.1-beta.2",
   "description": "Appflow-Chat AI聊天机器人组件库，提供聊天服务和UI组件",
   "type": "module",
   "main": "./dist/appflow-chat.cjs.js",
