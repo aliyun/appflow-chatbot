@@ -2,7 +2,7 @@
  * Appflow Chat - NPM 包入口文件
  * 
  * 使用方式：
- * import { chatService, MarkdownRenderer, BubbleContent } from '@ali/appflow-chat';
+ * import { chatService, MarkdownRenderer, BubbleContent } from '@alicloud/appflow-chat';
  */
 
 // ==================== 服务导出 ====================

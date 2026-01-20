@@ -3,7 +3,7 @@
  * 用于自定义UI场景，不依赖React
  */
 
-import { fetchEventSource } from '@ali/chatui-sdk/esm/sdk/ChatSSE.js';
+import { fetchEventSource } from '@/utils/fetchEventSource';
 import { fetchUploadApi } from '@/hooks/usePreSignUpload';
 import Cookies from 'js-cookie';
 
