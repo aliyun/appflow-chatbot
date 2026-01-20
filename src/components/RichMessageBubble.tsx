@@ -254,7 +254,7 @@ export const RichMessageBubble: React.FC<RichMessageBubbleProps> = ({
           role="bot"
         >
           {/* 参考资料 */}
-          {references.length > 0 && status === 'Success' && (
+          {references && references.length > 0 && status === 'Success' && (
             <ReferencesContainer>
               <DocReferences
                 items={references}
