@@ -23,7 +23,6 @@
     "publish:npm": "npm run build && node scripts/publish-npm.js"
   },
   "dependencies": {
-    "@ali/chatui-sdk": "^6.6.5",
     "axios": "^1.7.9",
     "js-cookie": "^3.0.5",
     "katex": "^0.16.11",
