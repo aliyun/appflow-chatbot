@@ -36,12 +36,8 @@ const StatusText = styled.div`
 // ==================== Types ====================
 
 export interface HistoryCardProps {
-  /** 审批状态 */
-  approvalStatus?: string;
-  /** 表单值 */
-  formValues?: Record<string, any>;
-  /** 表单 Schema */
-  formSchema?: CustomParamSchema;
+  /** 消息数据对象 */
+  data: any;
 }
 
 /**
@@ -68,7 +64,35 @@ export const convertSchemaToUpperCase = (schema: any): CustomParamSchema | undef
     result.Required = schema.required;
   }
 
-  if (schema.properties && typeof schema.properties === 'object') {
+  // 排序字段
+  if (schema.order !== undefined) {
+    result.order = schema.order;
+  }
+
+  // 处理 AssociationPropertyMetadata
+  if (schema.associationPropertyMetadata) {
+    const metadata = schema.associationPropertyMetadata;
+    result.AssociationPropertyMetadata = {};
+    
+    // SubType（数组格式）
+    if (metadata.subType) {
+      const subType = metadata.subType;
+      // 确保是数组格式
+      result.AssociationPropertyMetadata.SubType = Array.isArray(subType) ? subType : [subType];
+    }
+    
+    // EnumValues
+    if (metadata.enumValues) {
+      result.AssociationPropertyMetadata.EnumValues = metadata.enumValues;
+    }
+    
+    // EnumDisplayStyle
+    if (metadata.enumDisplayStyle) {
+      result.AssociationPropertyMetadata.EnumDisplayStyle = metadata.enumDisplayStyle;
+    }
+  }
+
+  if ((schema.properties && typeof schema.properties === 'object')) {
     result.Properties = {};
     for (const [key, value] of Object.entries(schema.properties)) {
       const converted = convertSchemaToUpperCase(value);
@@ -88,21 +112,15 @@ export const convertSchemaToUpperCase = (schema: any): CustomParamSchema | undef
 /**
  * HistoryCard 历史卡片组件 (SDK 版本)
  * 用于展示历史对话中的 card 类型消息（只读模式）
- * 
- * @example
- * ```tsx
- * <HistoryCard
- *   approvalStatus="approved"
- *   formValues={{ name: 'test', age: 18 }}
- *   formSchema={schema}
- * />
- * ```
  */
-export const HistoryCard: React.FC<HistoryCardProps> = ({
-  approvalStatus,
-  formValues = {},
-  formSchema,
-}) => {
+export const HistoryCard: React.FC<HistoryCardProps> = ({ data }) => {
+  // 从data中提取需要的参数
+  const approvalStatus = data?.approvalStatus;
+  
+  // 使用测试数据或真实数据
+  const formValues = (data?.formValues || {});
+  const formSchema = data?.formSchema;
+
   // 判断是否已提交
   const isApproved = approvalStatus === 'approved';
 

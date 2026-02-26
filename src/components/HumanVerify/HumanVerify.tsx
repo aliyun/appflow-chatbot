@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Button, message } from 'antd';
 import styled from 'styled-components';
-import CustomParamsRenderer, { validateCustomParams, CustomParamSchema } from './CustomParamsRenderer';
+import CustomParamsRenderer, { validateCustomParams, UploadSender, FileUploader } from './CustomParamsRenderer';
 
 // ==================== Styled Components ====================
 
@@ -35,16 +35,12 @@ const StatusText = styled.div`
 // ==================== Types ====================
 
 export interface HumanVerifyProps {
-  /** 验证ID */
-  verifyId?: string;
-  /** 会话 Webhook */
-  sessionWebhook?: string;
-  /** 是否已提交 */
-  approved?: boolean;
-  /** CustomParams 的 schema */
-  customParamsSchema?: CustomParamSchema;
-  /** CustomParams 的 key（用于提交时的字段名） */
-  customParamsKey?: string;
+  /** 消息数据对象 */
+  data: any;
+  /** 上传发送方法 */
+  uploadSender?: UploadSender;
+  /** 文件上传方法 */
+  fileUploader?: FileUploader;
   /** 提交回调函数 */
   onSubmit?: (data: {
     verifyId: string;
@@ -58,39 +54,20 @@ export interface HumanVerifyProps {
 /**
  * HumanVerify 人工审核组件 (SDK 版本)
  * 用于展示需要人工审核的表单，并处理提交逻辑
- * 
- * @example
- * ```tsx
- * <HumanVerify
- *   verifyId="xxx"
- *   sessionWebhook="https://..."
- *   approved={false}
- *   customParamsSchema={schema}
- *   customParamsKey="customParams"
- *   onSubmit={(data) => {
- *     bot.postMessage({
- *       msgType: 'cardCallBack',
- *       data: {
- *         sessionWebhook: data.sessionWebhook,
- *         content: JSON.stringify({
- *           verifyId: data.verifyId,
- *           status: data.status,
- *           [data.customParamsKey]: data.customParamsValue,
- *         }),
- *       },
- *     });
- *   }}
- * />
- * ```
  */
-export const HumanVerify: React.FC<HumanVerifyProps> = ({
-  verifyId,
-  sessionWebhook,
-  approved = false,
-  customParamsSchema,
-  customParamsKey = 'customParams',
-  onSubmit,
+export const HumanVerify: React.FC<HumanVerifyProps> = ({ 
+  data,
+  uploadSender,
+  fileUploader,
+  onSubmit
 }) => {
+  // 从 data 中提取需要的参数
+  const verifyId = data?.verifyId;
+  const sessionWebhook = data?.sessionWebhook;
+  const approved = data?.approved || false;
+  const customParamsSchema = data?.customParams;
+  const customParamsKey = data?.customParamsKey;
+
   // CustomParams表单状态管理
   const [customParamsValue, setCustomParamsValue] = useState<Record<string, any>>({});
   // CustomParams验证错误状态
@@ -142,7 +119,7 @@ export const HumanVerify: React.FC<HumanVerifyProps> = ({
     }
 
     // 调用提交回调
-    onSubmit({
+    onSubmit?.({
       verifyId,
       sessionWebhook: sessionWebhook || '',
       status: 'approve',
@@ -159,7 +136,8 @@ export const HumanVerify: React.FC<HumanVerifyProps> = ({
           value={customParamsValue}
           onChange={setCustomParamsValue}
           errors={validationErrors}
-          disabled={approved}
+          uploadSender={uploadSender}
+          fileUploader={fileUploader}
         />
       )}
       <StatusContainer $approved={approved}>

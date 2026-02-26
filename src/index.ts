@@ -78,3 +78,4 @@ export type {
 
 // ==================== 工具函数导出 ====================
 export { loadEchartsScript } from './utils/loadEcharts';
+export { loadMermaidScript } from './utils/loadMermaid';

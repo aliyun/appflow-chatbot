@@ -13,6 +13,7 @@ import Chart from './components/Chart';
 import { convertTableDataToMarkdown } from './utils/dataProcessor';
 import Loading from './components/Loading';
 import Error from './components/Error';
+import Mermaid from './components/Mermaid';
 
 export interface MarkdownViewProps {
   /** Markdown 内容 */
@@ -133,6 +134,12 @@ export const MarkdownView: React.FC<MarkdownViewProps> = ({
             console.error("图表数据解析错误:", error);
             return <Error text={'图表数据加载失败，请检查数据格式'} />;
           }
+        }
+
+        // mermaid图表信息块处理
+        if (finalLang === 'language-mermaid') {
+          const codeContent = String(props.children).replace(/\n$/, '');
+          return <Mermaid code={codeContent} />;
         }
 
         return <ASyntaxHighLight>{props.children}</ASyntaxHighLight>;
