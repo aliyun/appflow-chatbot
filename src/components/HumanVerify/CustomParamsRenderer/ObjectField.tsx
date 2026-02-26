@@ -106,7 +106,7 @@ export const ObjectField: React.FC<ObjectFieldProps> = ({
 
       <ObjectContent>
         {sortedProperties.map(([propertyName, propertySchema]) => {
-          const isRequired = Required.includes(propertyName);
+          const isRequired = RequiredFields.includes(propertyName);
           return (
             <React.Suspense key={propertyName} fallback={<div>加载中...</div>}>
               <FieldRenderer

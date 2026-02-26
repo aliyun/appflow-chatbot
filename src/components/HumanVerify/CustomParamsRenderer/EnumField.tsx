@@ -64,11 +64,9 @@ const EnumRadio = styled.div`
  * - radio: 单选按钮组
  */
 export const EnumField: React.FC<EnumFieldProps> = ({
-  name,
   schema,
   value,
   onChange,
-  required = false,
   disabled = false,
 }) => {
   const { Type } = schema;

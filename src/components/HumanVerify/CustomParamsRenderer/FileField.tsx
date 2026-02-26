@@ -157,11 +157,9 @@ const hasImageType = (subTypes?: FileSubType[]): boolean => {
  * 优先从 AssociationPropertyMetadata.SubType 读取，兼容旧的 FileSubType 字段
  */
 export const FileField: React.FC<FileFieldProps> = ({
-  name,
   schema,
   value,
   onChange,
-  required = false,
   disabled = false,
   uploadSender,
   fileUploader,

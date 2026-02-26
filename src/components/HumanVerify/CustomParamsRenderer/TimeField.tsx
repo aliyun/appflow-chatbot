@@ -51,11 +51,9 @@ const getPickerType = (subType?: TimeSubType): 'date' | 'month' | undefined => {
  * 优先从 AssociationPropertyMetadata.SubType 读取，兼容旧的 TimeSubType 字段
  */
 export const TimeField: React.FC<TimeFieldProps> = ({
-  name,
   schema,
   value,
   onChange,
-  required = false,
   disabled = false,
 }) => {
   // 优先从 AssociationPropertyMetadata.SubType 读取，取数组第一个元素
