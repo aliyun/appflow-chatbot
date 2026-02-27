@@ -1,3 +1,5 @@
+import { addExternalScript } from "./common";
+
 export const loadMermaidScript = (): Promise<void> => {
   return new Promise((resolve, reject) => {
     // 检查mermaid是否已经加载
@@ -26,15 +28,5 @@ export const loadMermaidScript = (): Promise<void> => {
       });
   });
 };
-
-export function addExternalScript(src: string) {
-  return new Promise<void>((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = src;
-    script.onload = () => resolve();
-    script.onerror = () => reject();
-    document.body.appendChild(script);
-  });
-}
 
 export default loadMermaidScript;
