@@ -1,4 +1,4 @@
-import { addExternalScript, checkScriptAccessible } from "./common";
+import { addExternalScript } from "./common";
 
 /**
  * ECharts 按需加载函数
@@ -11,31 +11,16 @@ export const loadEchartsScript = (): Promise<void> => {
       resolve();
       return;
     }
-    // 异步函数来处理CDN检查和脚本加载
-    const loadScript = async () => {
-      // 默认地址
-      let echartsScript = 'https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.2/echarts.min.js';
-      // 阿里云cdn地址
-      const aliCdnUrl = 'https://o.alicdn.com/appflow/chatbot/v1/echarts.min.js';
-      try {
-        // 检查阿里云CDN是否可访问
-        const isAliCdnAccessible = await checkScriptAccessible(aliCdnUrl);
-        if (isAliCdnAccessible) {
-          echartsScript = aliCdnUrl;
-        }
-      } catch (error) {
-        console.warn('检查阿里云CDN可访问性失败，使用默认CDN:', error);
-      }
-      // 动态加载echarts
-      addExternalScript(echartsScript)
-        .then(() => { resolve() })
-        .catch((error) => {
-          console.error('echarts加载失败:', error);
-          reject(error);
-        });
-    };
-    // 执行异步加载
-    loadScript().catch(reject);
+
+    // CDN地址
+    const echartsScript = 'https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.2/echarts.min.js';
+
+    addExternalScript(echartsScript)
+      .then(() => resolve())
+      .catch((error) => {
+        console.error('echarts加载失败:', error);
+        reject(error);
+      });
   });
 };
 
