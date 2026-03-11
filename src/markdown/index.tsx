@@ -199,7 +199,7 @@ export const MarkdownView: React.FC<MarkdownViewProps> = ({
   const convertThinkToDetails = (content: string) => {
     return content?.replace(
       /<think>([\s\S]*?)<\/think>/g,
-      '<details open><summary>深度思考</summary><pre class="think">$1</pre></details>'
+      '<details open><summary>深度思考</summary><pre class="think">$1</pre></details>\n\n'
     );
   };
 
