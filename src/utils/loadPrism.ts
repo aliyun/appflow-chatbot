@@ -41,7 +41,7 @@ export async function loadPrism(): Promise<any> {
 
     // 加载 Prism 核心 JS
     const script = document.createElement('script');
-    script.src = `${PRISM_CDN_BASE}/prism.min.js`;
+    script.src = `${PRISM_CDN_BASE}/prism.js`;
     script.onload = () => {
       // 加载自动加载器（用于按需加载语言）
       const autoloaderScript = document.createElement('script');
