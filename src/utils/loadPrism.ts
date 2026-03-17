@@ -3,8 +3,11 @@
  * 用于代码语法高亮
  */
 
-// Prism CDN 基础路径
-const PRISM_CDN_BASE = 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0';
+// Prism CDN 基础路径 (使用 unpkg.com，国内访问更稳定)
+const PRISM_CDN_BASE = 'https://unpkg.com/prismjs@1.29.0';
+
+// Prism 主题 CDN 路径 (coldark-cold 主题在 prism-themes 包中)
+const PRISM_THEME_URL = 'https://unpkg.com/prism-themes@1.9.0/themes/prism-coldark-cold.min.css';
 
 // 已加载的语言缓存
 const loadedLanguages = new Set<string>(['javascript', 'css', 'markup', 'clike']);
@@ -27,42 +30,32 @@ export async function loadPrism(): Promise<any> {
   }
 
   prismLoadPromise = new Promise((resolve, reject) => {
-    // 加载 CSS 主题
+    // 加载 CSS 主题 (使用 prism-themes 包中的 coldark-cold 主题)
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = `${PRISM_CDN_BASE}/themes/prism-coldark-cold.min.css`;
+    link.href = PRISM_THEME_URL;
     document.head.appendChild(link);
 
-    // 加载行号插件 CSS
-    const lineNumbersCSS = document.createElement('link');
-    lineNumbersCSS.rel = 'stylesheet';
-    lineNumbersCSS.href = `${PRISM_CDN_BASE}/plugins/line-numbers/prism-line-numbers.min.css`;
-    document.head.appendChild(lineNumbersCSS);
+    // 注意：不再加载 Prism 的 line-numbers 插件，改用手动渲染行号
+    // 这样可以避免与 React 组件的行号渲染冲突
 
     // 加载 Prism 核心 JS
     const script = document.createElement('script');
     script.src = `${PRISM_CDN_BASE}/prism.min.js`;
     script.onload = () => {
-      // 加载行号插件
-      const lineNumbersScript = document.createElement('script');
-      lineNumbersScript.src = `${PRISM_CDN_BASE}/plugins/line-numbers/prism-line-numbers.min.js`;
-      lineNumbersScript.onload = () => {
-        // 加载自动加载器（用于按需加载语言）
-        const autoloaderScript = document.createElement('script');
-        autoloaderScript.src = `${PRISM_CDN_BASE}/plugins/autoloader/prism-autoloader.min.js`;
-        autoloaderScript.onload = () => {
-          const Prism = (window as any).Prism;
-          if (Prism && Prism.plugins && Prism.plugins.autoloader) {
-            // 配置自动加载器的语言路径
-            Prism.plugins.autoloader.languages_path = `${PRISM_CDN_BASE}/components/`;
-          }
-          resolve(Prism);
-        };
-        autoloaderScript.onerror = reject;
-        document.head.appendChild(autoloaderScript);
+      // 加载自动加载器（用于按需加载语言）
+      const autoloaderScript = document.createElement('script');
+      autoloaderScript.src = `${PRISM_CDN_BASE}/plugins/autoloader/prism-autoloader.min.js`;
+      autoloaderScript.onload = () => {
+        const Prism = (window as any).Prism;
+        if (Prism && Prism.plugins && Prism.plugins.autoloader) {
+          // 配置自动加载器的语言路径
+          Prism.plugins.autoloader.languages_path = `${PRISM_CDN_BASE}/components/`;
+        }
+        resolve(Prism);
       };
-      lineNumbersScript.onerror = reject;
-      document.head.appendChild(lineNumbersScript);
+      autoloaderScript.onerror = reject;
+      document.head.appendChild(autoloaderScript);
     };
     script.onerror = reject;
     document.head.appendChild(script);
