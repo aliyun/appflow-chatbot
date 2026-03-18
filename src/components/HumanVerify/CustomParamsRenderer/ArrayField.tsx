@@ -1,11 +1,17 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 import { Button, Input, InputNumber, Switch, Space } from 'antd';
 import { PlusOutlined, MinusOutlined } from '@ant-design/icons';
+import { ArrayFieldProps, CustomParamSchema, FileSubType, sortPropertiesByOrder } from './types';
 import styled from 'styled-components';
-import { ArrayFieldProps, CustomParamSchema } from './types';
+
+// 图片类型列表
+const IMAGE_TYPES: FileSubType[] = ['jpg', 'png', 'svg'];
 
 // 前向声明，避免循环依赖
 const FieldRenderer = React.lazy(() => import('./FieldRenderer'));
+
+// 全局计数器，用于生成稳定的数组项 key
+let globalItemCounter = 0;
 
 // ==================== Styled Components ====================
 
@@ -104,6 +110,37 @@ const ArrayActions = styled.div`
   gap: 8px;
 `;
 
+// 复杂类型变体
+type ComplexItemVariant = 'fileImage' | 'fileDoc' | 'time' | 'enum';
+
+// 复杂类型数组项行
+const ArrayItemRowComplex = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+`;
+
+// 复杂类型的 Actions 容器，根据变体调整 padding-top
+const ArrayItemActionsComplex = styled.div<{ $variant?: ComplexItemVariant }>`
+  flex-shrink: 0;
+  padding-top: ${({ $variant }) => {
+    switch ($variant) {
+      case 'fileDoc':
+      case 'time':
+      case 'enum':
+        return '4px';
+      case 'fileImage':
+      default:
+        return '38px';
+    }
+  }};
+`;
+
 /**
  * 获取数组项的默认值
  */
@@ -149,6 +186,8 @@ export const ArrayField: React.FC<ArrayFieldProps> = ({
   level = 0,
   errors = {},
   fieldPath = '',
+  uploadSender,
+  fileUploader,
 }) => {
   const { Title, Description, Items } = schema;
   const displayTitle = Title || name;
@@ -156,11 +195,39 @@ export const ArrayField: React.FC<ArrayFieldProps> = ({
   // 计算当前数组的完整路径
   const currentPath = fieldPath ? `${fieldPath}.${name}` : name;
 
+  // 使用 ref 来存储每个数组项的唯一 key，避免在数据中添加额外字段
+  const itemKeysRef = useRef<Map<number, string>>(new Map());
+  
+  // 获取或创建数组项的唯一 key
+  const getItemKey = useCallback((index: number, item: any): string => {
+    // 如果 item 有 url 或 uid，优先使用（已上传的文件）
+    if (item?.url) return item.url;
+    if (item?.uid) return item.uid;
+    if (item?.__arrayItemId) return item.__arrayItemId;
+    
+    // 否则使用 ref 中存储的 key
+    if (!itemKeysRef.current.has(index)) {
+      itemKeysRef.current.set(index, `item-${++globalItemCounter}`);
+    }
+    return itemKeysRef.current.get(index)!;
+  }, []);
+
   // 添加数组项
   const handleAdd = useCallback(() => {
     if (!Items) return;
     const newItem = getDefaultValue(Items);
-    onChange?.([...value, newItem]);
+    const newIndex = value.length;
+    
+    // 为新项预先生成 key
+    itemKeysRef.current.set(newIndex, `item-${++globalItemCounter}`);
+    
+    // 对于 object 类型，添加 __arrayItemId；对于其他类型，保持原值
+    if (typeof newItem === 'object' && newItem !== null) {
+      onChange?.([...value, { ...newItem, __arrayItemId: itemKeysRef.current.get(newIndex) }]);
+    } else {
+      // 对于 file、time 等类型，保持 undefined，不要包装成对象
+      onChange?.([...value, newItem]);
+    }
   }, [Items, value, onChange]);
 
   // 删除数组项
@@ -196,9 +263,35 @@ export const ArrayField: React.FC<ArrayFieldProps> = ({
     [value, onChange]
   );
 
+  // 判断数组项是否有枚举值（从 AssociationPropertyMetadata 或旧字段读取）
+  const hasItemEnumValues = (Items?.AssociationPropertyMetadata?.EnumValues?.length ?? 0) > 0 || 
+    (Array.isArray(Items?.EnumValues) && Items.EnumValues.length > 0);
+  
   // 判断数组项类型（必须在 early return 之前）
   const isObjectItems = Items?.Type === 'object' && Items?.Properties;
   const isArrayItems = Items?.Type === 'array';
+  const isFileItems = Items?.Type === 'file';
+  const isTimeItems = Items?.Type === 'time';
+  // 需要使用 FieldRenderer 渲染的复杂类型
+  const needsFieldRenderer = isObjectItems || isArrayItems || isFileItems || isTimeItems || hasItemEnumValues;
+
+  // 判断文件类型是否为图片类型
+  const isImageFileType = useMemo((): boolean => {
+    if (!isFileItems) return false;
+    
+    // 优先从 AssociationPropertyMetadata.SubType 读取
+    const subTypes = Items?.AssociationPropertyMetadata?.SubType;
+    if (Array.isArray(subTypes) && subTypes.length > 0) {
+      return subTypes.some(subType => IMAGE_TYPES.includes(subType as FileSubType));
+    }
+    
+    // 兼容旧的 FileSubType 字段
+    if (Items?.FileSubType) {
+      return IMAGE_TYPES.includes(Items.FileSubType);
+    }
+    
+    return false;
+  }, [isFileItems, Items]);
 
   if (!Items) {
     return null;
@@ -271,7 +364,10 @@ export const ArrayField: React.FC<ArrayFieldProps> = ({
   const renderObjectItemContent = (item: any, index: number) => {
     if (!Items.Properties) return null;
 
-    return Object.entries(Items.Properties).map(([propertyName, propertySchema]) => {
+    // 使用排序后的属性列表进行渲染
+    const sortedProperties = sortPropertiesByOrder(Items.Properties);
+
+    return sortedProperties.map(([propertyName, propertySchema]) => {
       const isRequired = itemRequired.includes(propertyName);
       return (
         <React.Suspense key={propertyName} fallback={<div>加载中...</div>}>
@@ -285,6 +381,8 @@ export const ArrayField: React.FC<ArrayFieldProps> = ({
             level={level + 1}
             errors={errors}
             fieldPath={`${currentPath}[${index}]`}
+            uploadSender={uploadSender}
+            fileUploader={fileUploader}
           />
         </React.Suspense>
       );
@@ -304,6 +402,29 @@ export const ArrayField: React.FC<ArrayFieldProps> = ({
           level={level + 1}
           errors={errors}
           fieldPath={currentPath}
+          uploadSender={uploadSender}
+          fileUploader={fileUploader}
+        />
+      </React.Suspense>
+    );
+  };
+
+  // 渲染复杂类型的数组项（file、time、带枚举的类型）
+  const renderComplexItemContent = (item: any, index: number) => {
+    return (
+      <React.Suspense fallback={<div>加载中...</div>}>
+        <FieldRenderer
+          name={`[${index}]`}
+          schema={Items}
+          value={item}
+          onChange={(newValue) => handleItemChange(index, newValue)}
+          disabled={disabled}
+          level={level + 1}
+          errors={errors}
+          fieldPath={currentPath}
+          hideLabel={true}
+          uploadSender={uploadSender}
+          fileUploader={fileUploader}
         />
       </React.Suspense>
     );
@@ -322,6 +443,9 @@ export const ArrayField: React.FC<ArrayFieldProps> = ({
 
       <ArrayItems>
         {value.map((item, index) => {
+            // 获取数组项的唯一key
+            const itemKey = getItemKey(index, item);
+            
             // 渲染数组项内容
             const renderItemContent = () => {
               if (isObjectItems) {
@@ -338,6 +462,37 @@ export const ArrayField: React.FC<ArrayFieldProps> = ({
                   <ArrayItemContent>
                     {renderArrayItemContent(item, index)}
                   </ArrayItemContent>
+                );
+              }
+              if (isFileItems || isTimeItems || hasItemEnumValues) {
+                // 复杂类型（file、time、带枚举）：使用 FieldRenderer 渲染
+                // 确定变体类型
+                let variant: ComplexItemVariant | undefined;
+                if (isFileItems) {
+                  // 区分图片类型和非图片类型的文件上传
+                  variant = isImageFileType ? 'fileImage' : 'fileDoc';
+                } else if (isTimeItems) {
+                  // 时间类型
+                  variant = 'time';
+                } else if (hasItemEnumValues) {
+                  variant = 'enum';
+                }
+                return (
+                  <ArrayItemRowComplex>
+                    <ArrayItemInput>
+                      {renderComplexItemContent(item, index)}
+                    </ArrayItemInput>
+                    <ArrayItemActionsComplex $variant={variant}>
+                      <Button
+                        type="text"
+                        danger
+                        icon={<MinusOutlined />}
+                        onClick={() => handleRemove(index)}
+                        disabled={disabled}
+                        size="small"
+                      />
+                    </ArrayItemActionsComplex>
+                  </ArrayItemRowComplex>
                 );
               }
               // 基础类型：渲染输入框和删除按钮
@@ -361,7 +516,7 @@ export const ArrayField: React.FC<ArrayFieldProps> = ({
             };
 
             return (
-              <ArrayItem key={index}>
+              <ArrayItem key={itemKey}>
                 {renderItemContent()}
               </ArrayItem>
             );
@@ -376,7 +531,7 @@ export const ArrayField: React.FC<ArrayFieldProps> = ({
             shape="circle"
             icon={<PlusOutlined />}
           />
-          {(isObjectItems || isArrayItems) && value.length > 0 && (
+          {needsFieldRenderer && value.length > 0 && (
             <Button
               onClick={() => handleRemove(value.length - 1)}
               shape="circle"

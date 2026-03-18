@@ -13,6 +13,7 @@ import Chart from './components/Chart';
 import { convertTableDataToMarkdown } from './utils/dataProcessor';
 import Loading from './components/Loading';
 import Error from './components/Error';
+import Mermaid from './components/Mermaid';
 
 export interface MarkdownViewProps {
   /** Markdown 内容 */
@@ -47,7 +48,8 @@ export const MarkdownView: React.FC<MarkdownViewProps> = ({
               objectFit: 'contain',
             }}
             src={props.src} 
-            alt={props.alt} 
+            alt={props.alt}
+            preview={{ zIndex: 1100 }}
           />
         );
       },
@@ -135,6 +137,12 @@ export const MarkdownView: React.FC<MarkdownViewProps> = ({
           }
         }
 
+        // mermaid图表信息块处理
+        if (finalLang === 'language-mermaid') {
+          const codeContent = String(props.children).replace(/\n$/, '');
+          return <Mermaid code={codeContent} />;
+        }
+
         return <ASyntaxHighLight>{props.children}</ASyntaxHighLight>;
       },
       p: (paragraph: any) => {
@@ -154,6 +162,7 @@ export const MarkdownView: React.FC<MarkdownViewProps> = ({
                 src={image.properties.src}
                 className="max-w-full h-auto align-middle border-none rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 ease-in-out mt-2 mb-2"
                 alt={image.properties.alt}
+                preview={{ zIndex: 1100 }}
               />
               {isSlice && <p>
                 {paragraph?.children?.slice(1)}
@@ -190,7 +199,7 @@ export const MarkdownView: React.FC<MarkdownViewProps> = ({
   const convertThinkToDetails = (content: string) => {
     return content?.replace(
       /<think>([\s\S]*?)<\/think>/g,
-      '<details open><summary>深度思考</summary><pre class="think">$1</pre></details>'
+      '<details open><summary>深度思考</summary><pre class="think">$1</pre></details>\n\n'
     );
   };
 

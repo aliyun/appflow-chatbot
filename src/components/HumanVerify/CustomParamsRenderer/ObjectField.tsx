@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import styled from 'styled-components';
-import { ObjectFieldProps } from './types';
+import { ObjectFieldProps, sortPropertiesByOrder } from './types';
 
 // 前向声明，避免循环依赖
 const FieldRenderer = React.lazy(() => import('./FieldRenderer'));
@@ -66,6 +66,8 @@ export const ObjectField: React.FC<ObjectFieldProps> = ({
   level = 0,
   errors = {},
   fieldPath = '',
+  uploadSender,
+  fileUploader,
 }) => {
   const { Title, Description, Properties, Required: RequiredFields = [] } = schema;
   const displayTitle = Title || name;
@@ -88,6 +90,9 @@ export const ObjectField: React.FC<ObjectFieldProps> = ({
     return null;
   }
 
+  // 使用排序后的属性列表进行渲染
+  const sortedProperties = sortPropertiesByOrder(Properties);
+
   return (
     <ObjectFieldContainer>
       <ObjectTitle>
@@ -100,7 +105,7 @@ export const ObjectField: React.FC<ObjectFieldProps> = ({
       )}
 
       <ObjectContent>
-        {Object.entries(Properties).map(([propertyName, propertySchema]) => {
+        {sortedProperties.map(([propertyName, propertySchema]) => {
           const isRequired = RequiredFields.includes(propertyName);
           return (
             <React.Suspense key={propertyName} fallback={<div>加载中...</div>}>
@@ -114,6 +119,8 @@ export const ObjectField: React.FC<ObjectFieldProps> = ({
                 level={level + 1}
                 errors={errors}
                 fieldPath={currentPath}
+                uploadSender={uploadSender}
+                fileUploader={fileUploader}
               />
             </React.Suspense>
           );

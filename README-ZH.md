@@ -7,11 +7,7 @@ AI 聊天机器人组件库，提供聊天服务和 UI 组件。
 ### 基础安装
 
 ```bash
-# 阿里内部
-tnpm install @ali/appflow-chat
-
-# NPM 官方
-npm install appflow-chat
+npm install @alicloud/appflow-chat
 ```
 
 ### 安装 Peer Dependencies
@@ -33,7 +29,7 @@ npm install react react-dom antd
 ### 1. 初始化服务
 
 ```typescript
-import { chatService } from '@ali/appflow-chat';
+import { chatService } from '@alicloud/appflow-chat';
 
 // 初始化
 const config = await chatService.setup({
@@ -65,7 +61,7 @@ chatService.chat({ text: '你好' })
 ### 3. 使用 UI 组件
 
 ```tsx
-import { MessageBubble, RichMessageBubble } from '@ali/appflow-chat';
+import { MessageBubble, RichMessageBubble } from '@alicloud/appflow-chat';
 
 // 简单消息气泡
 <MessageBubble 
@@ -85,7 +81,7 @@ import { MessageBubble, RichMessageBubble } from '@ali/appflow-chat';
 ### 4. 使用 MarkdownView 组件
 
 ```tsx
-import { MarkdownView } from '@ali/appflow-chat';
+import { MarkdownView } from '@alicloud/appflow-chat';
 
 // 渲染 Markdown 内容
 <MarkdownView 
@@ -97,7 +93,7 @@ import { MarkdownView } from '@ali/appflow-chat';
 ### 5. 使用 Core 组件（高级定制）
 
 ```tsx
-import { BubbleContent, SourceContent } from '@ali/appflow-chat';
+import { BubbleContent, SourceContent } from '@alicloud/appflow-chat';
 
 // 自定义消息气泡
 <div className="my-bubble">

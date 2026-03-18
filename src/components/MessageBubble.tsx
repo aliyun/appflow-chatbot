@@ -351,11 +351,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             {/* HumanVerify事件 - 人工审核表单 */}
             {eventType === 'humanVerify' && humanVerifyData && (
               <HumanVerify 
-                verifyId={humanVerifyData.verifyId}
-                sessionWebhook={humanVerifyData.sessionWebhook}
-                approved={humanVerifyData.approved}
-                customParamsSchema={humanVerifyData.customParams}
-                customParamsKey={humanVerifyData.customParamsKey}
+                data={humanVerifyData}
                 onSubmit={onHumanVerifySubmit}
               />
             )}
@@ -363,14 +359,12 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             {/* HistoryCard 事件 - 历史对话中的审核卡片 */}
             {eventType === 'historyCard' && historyCardData && (
               <HistoryCard 
-                approvalStatus={historyCardData.approvalStatus}
-                formValues={historyCardData.formValues}
-                formSchema={historyCardData.formSchema}
+                data={historyCardData}
               />
             )}
             
             {/* 参考资料 */}
-            {references.length > 0 && status === 'Success' && (
+            {references && references.length > 0 && status === 'Success' && (
               <ReferencesContainer>
                 <DocReferences
                   items={references}

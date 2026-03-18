@@ -6,12 +6,16 @@ import {
   CustomParamSchema,
   ValidationResult,
   validateCustomParams,
+  sortPropertiesByOrder,
 } from './types';
 
 export * from './types';
 export { FieldRenderer } from './FieldRenderer';
 export { ArrayField } from './ArrayField';
 export { ObjectField } from './ObjectField';
+export { TimeField } from './TimeField';
+export { FileField } from './FileField';
+export { EnumField } from './EnumField';
 
 // ==================== Styled Components ====================
 
@@ -42,6 +46,9 @@ const EmptyState = styled.div`
  *     name: { Type: 'string', Title: '名称', Description: '请输入名称' },
  *     age: { Type: 'number', Title: '年龄' },
  *     enabled: { Type: 'boolean', Title: '是否启用' },
+ *     date: { Type: 'time', Title: '日期', TimeSubType: 'year-month-day' },
+ *     file: { Type: 'file', Title: '文件', FileSubType: 'image' },
+ *     status: { Type: 'string', Title: '状态', EnumValues: ['active', 'inactive'], EnumDisplayStyle: 'radio' },
  *     tags: {
  *       Type: 'array',
  *       Title: '标签',
@@ -72,6 +79,8 @@ export const CustomParamsRenderer: React.FC<CustomParamsRendererProps> = ({
   onChange,
   disabled = false,
   errors = {},
+  uploadSender,
+  fileUploader,
 }) => {
   const Properties = schema?.Properties;
   const Required = schema?.Required || [];
@@ -96,9 +105,12 @@ export const CustomParamsRenderer: React.FC<CustomParamsRendererProps> = ({
     );
   }
 
+  // 使用排序后的属性列表进行渲染
+  const sortedProperties = sortPropertiesByOrder(Properties);
+
   return (
     <CustomParamsRendererContainer>
-      {Object.entries(Properties).map(([propertyName, propertySchema]) => {
+      {sortedProperties?.map(([propertyName, propertySchema]) => {
         const isRequired = Required.includes(propertyName);
 
         return (
@@ -113,6 +125,8 @@ export const CustomParamsRenderer: React.FC<CustomParamsRendererProps> = ({
             level={0}
             errors={errors}
             fieldPath=""
+            uploadSender={uploadSender}
+            fileUploader={fileUploader}
           />
         );
       })}
