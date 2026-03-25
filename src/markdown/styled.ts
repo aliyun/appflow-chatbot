@@ -13,6 +13,8 @@ export const StyledContentRender = styled.div<{
     overflow-wrap: break-word;
     
     > p {
+        display: block;
+        width: 100%;
         margin-bottom: 16px;
     }
   
