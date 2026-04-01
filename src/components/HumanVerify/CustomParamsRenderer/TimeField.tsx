@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useEffect, useState } from 'react';
 import { DatePicker, version } from 'antd';
 import { TimeFieldProps, TimeSubType } from './types';
 import styled from 'styled-components';
@@ -29,32 +29,6 @@ const getAntdMajorVersion = (): number => {
 };
 
 const isAntd5OrAbove = getAntdMajorVersion() >= 5;
-
-// ==================== 动态导入时间库 ====================
-
-// 根据 antd 版本动态选择时间库
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let dayjs: any = null;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let moment: any = null;
-
-if (isAntd5OrAbove) {
-  // antd 5.x 使用 dayjs
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    dayjs = require('dayjs');
-  } catch {
-    console.warn('dayjs not found, TimeField may not work correctly with antd 5.x');
-  }
-} else {
-  // antd 4.x 使用 moment
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    moment = require('moment');
-  } catch {
-    console.warn('moment not found, TimeField may not work correctly with antd 4.x');
-  }
-}
 
 // ==================== 工具函数 ====================
 
@@ -88,35 +62,33 @@ const getPickerType = (subType?: TimeSubType): 'date' | 'month' | undefined => {
   }
 };
 
-/**
- * 将字符串值转换为时间对象（根据 antd 版本使用 dayjs 或 moment）
- */
+// ==================== 时间库加载器 ====================
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const parseValue = (value: string | null | undefined, format: string): any => {
-  if (!value) return null;
-  
-  if (isAntd5OrAbove && dayjs) {
-    return dayjs(value, format);
-  } else if (moment) {
-    return moment(value, format);
-  }
-  
-  return null;
-};
+type TimeLibrary = any;
 
 /**
- * 将时间对象格式化为字符串
+ * 异步加载时间库
+ * antd 5.x 使用 dayjs，antd 4.x 使用 moment
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const formatValue = (date: any, format: string): string | null => {
-  if (!date) return null;
-  
-  // dayjs 和 moment 都有 format 方法
-  if (typeof date.format === 'function') {
-    return date.format(format);
+const loadTimeLibrary = async (): Promise<TimeLibrary | null> => {
+  if (isAntd5OrAbove) {
+    try {
+      const dayjs = await import('dayjs');
+      return dayjs.default || dayjs;
+    } catch {
+      console.warn('dayjs not found, TimeField may not work correctly with antd 5.x');
+      return null;
+    }
+  } else {
+    try {
+      const moment = await import('moment');
+      return moment.default || moment;
+    } catch {
+      console.warn('moment not found, TimeField may not work correctly with antd 4.x');
+      return null;
+    }
   }
-  
-  return null;
 };
 
 /**
@@ -134,6 +106,16 @@ export const TimeField: React.FC<TimeFieldProps> = ({
   onChange,
   disabled = false,
 }) => {
+  // 时间库状态
+  const [timeLib, setTimeLib] = useState<TimeLibrary | null>(null);
+
+  // 异步加载时间库
+  useEffect(() => {
+    loadTimeLibrary().then(lib => {
+      setTimeLib(lib);
+    });
+  }, []);
+
   // 优先从 AssociationPropertyMetadata.SubType 读取，取数组第一个元素
   // 兼容旧的 TimeSubType 字段
   const subType = useMemo((): TimeSubType | undefined => {
@@ -148,18 +130,34 @@ export const TimeField: React.FC<TimeFieldProps> = ({
   const picker = getPickerType(subType);
   const showTime = subType === 'datetime';
 
+  // 将字符串值转换为时间对象
+  const dateValue = useMemo(() => {
+    if (!value || !timeLib) return null;
+    
+    try {
+      const parsed = timeLib(value, format);
+      // 检查解析是否有效
+      if (parsed && typeof parsed.isValid === 'function' && !parsed.isValid()) {
+        return null;
+      }
+      return parsed;
+    } catch {
+      return null;
+    }
+  }, [value, format, timeLib]);
+
   // 处理值变化
+  // antd DatePicker onChange 签名: (date: Moment | Dayjs | null, dateString: string) => void
   const handleChange = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (date: any) => {
-      const formattedValue = formatValue(date, format);
-      onChange?.(formattedValue);
+    (_date: any, dateString: string | string[]) => {
+      // 直接使用 antd 提供的 dateString，这是已经格式化好的字符串
+      // 这样可以避免手动调用 format 方法，更加可靠
+      const stringValue = Array.isArray(dateString) ? dateString[0] : dateString;
+      onChange?.(stringValue || null);
     },
-    [onChange, format]
+    [onChange]
   );
-
-  // 将字符串值转换为时间对象
-  const dateValue = parseValue(value, format);
 
   return (
     <TimeFieldContainer>
