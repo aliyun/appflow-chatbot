@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { DatePicker, version } from 'antd';
 import { TimeFieldProps, TimeSubType } from './types';
 import styled from 'styled-components';
@@ -20,25 +20,52 @@ const getAntdMajorVersion = (): number => {
 
 const isAntd5OrAbove = getAntdMajorVersion() >= 5;
 
-// 同步加载时间库
+// 兼容 ESM 和 CJS 环境的时间库加载
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let timeLib: any = null;
 
-if (isAntd5OrAbove) {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    timeLib = require('dayjs');
-  } catch {
-    console.warn('dayjs not found');
+// 同步尝试加载时间库（CJS 环境下可用）
+const loadTimeLibSync = (): any => {
+  if (timeLib) return timeLib;
+
+  if (isAntd5OrAbove) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      timeLib = require('dayjs');
+    } catch {
+      // require 在 ESM 环境中可能失败，后续通过异步 import 兜底
+    }
+  } else {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      timeLib = require('moment');
+    } catch {
+      // require 在 ESM 环境中可能失败，后续通过异步 import 兜底
+    }
   }
-} else {
+  return timeLib;
+};
+
+// 异步加载时间库（ESM 环境下的兜底方案）
+const loadTimeLibAsync = async (): Promise<any> => {
+  if (timeLib) return timeLib;
+
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    timeLib = require('moment');
+    if (isAntd5OrAbove) {
+      const dayjs = await import('dayjs');
+      timeLib = dayjs.default || dayjs;
+    } else {
+      const moment = await import('moment');
+      timeLib = moment.default || moment;
+    }
   } catch {
-    console.warn('moment not found');
+    console.warn('Failed to load time library (both sync and async)');
   }
-}
+  return timeLib;
+};
+
+// 先尝试同步加载
+loadTimeLibSync();
 
 const getDateFormat = (subType?: TimeSubType): string => {
   switch (subType) {
@@ -68,6 +95,25 @@ export const TimeField: React.FC<TimeFieldProps> = ({
   onChange,
   disabled = false,
 }) => {
+  // 使用 state 管理时间库引用，确保异步加载完成后能触发重新渲染
+  const [lib, setLib] = useState<any>(() => timeLib);
+
+  // 如果同步加载失败，通过异步 import 兜底加载
+  useEffect(() => {
+    if (lib) return;
+
+    let cancelled = false;
+    loadTimeLibAsync().then((loaded) => {
+      if (!cancelled && loaded) {
+        setLib(loaded);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [lib]);
+
   const subType = useMemo((): TimeSubType | undefined => {
     const subTypeArray = schema.AssociationPropertyMetadata?.SubType;
     if (Array.isArray(subTypeArray) && subTypeArray.length > 0) {
@@ -80,21 +126,21 @@ export const TimeField: React.FC<TimeFieldProps> = ({
   const picker = getPickerType(subType);
   const showTime = subType === 'datetime';
 
-  // 将字符串值转换为时间对象 - 同步方式
+  // 将字符串值转换为时间对象
   const dateValue = useMemo(() => {
-    if (!value || !timeLib) return null;
+    if (!value || !lib) return null;
     
     try {
-      const parsed = timeLib(value, format);
+      const parsed = lib(value, format);
       if (parsed && typeof parsed.isValid === 'function' && !parsed.isValid()) {
         // 如果严格解析失败，尝试宽松解析
-        return timeLib(value);
+        return lib(value);
       }
       return parsed;
     } catch {
       return null;
     }
-  }, [value, format]);
+  }, [value, format, lib]);
 
   const handleChange = useCallback(
     (_date: any, dateString: string | string[]) => {
