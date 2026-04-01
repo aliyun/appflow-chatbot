@@ -1,6 +1,6 @@
 {
   "name": "@alicloud/appflow-chat",
-  "version": "0.0.4",
+  "version": "0.0.4-beta.1",
   "description": "Appflow-Chat AI聊天机器人组件库，提供聊天服务和UI组件",
   "type": "module",
   "main": "./dist/appflow-chat.cjs.js",
@@ -58,9 +58,19 @@
     "vite-plugin-dts": "^4.3.0"
   },
   "peerDependencies": {
-    "antd": "^5.0.0",
+    "antd": "^4.0.0 || ^5.0.0",
     "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "react-dom": "^18.0.0",
+    "dayjs": "^1.11.0",
+    "moment": "^2.29.0"
+  },
+  "peerDependenciesMeta": {
+    "dayjs": {
+      "optional": true
+    },
+    "moment": {
+      "optional": true
+    }
   },
   "files": [
     "dist",
