@@ -11,6 +11,8 @@ import { loadEchartsScript } from '@/utils/loadEcharts';
 import { DocReferences, DocReferenceItem } from './DocReferences';
 import { WebSearchPanel } from './WebSearchPanel';
 import { HumanVerify, HistoryCard, CustomParamSchema } from './HumanVerify';
+import { A2UISurface } from './A2UIRenderer';
+import type { A2UIMessage } from './A2UIRenderer';
 import { BubbleContent } from '@/core';
 import { useTranslation } from '@/i18n';
 
@@ -59,14 +61,21 @@ export interface MessageBubbleProps {
   
   // ==================== HumanVerify相关Props ====================
   
-  /** 事件类型（用于特殊消息如 humanVerify、historyCard） */
-  eventType?: 'humanVerify' | 'historyCard';
+  /** 事件类型（用于特殊消息如 humanVerify、historyCard、a2ui） */
+  eventType?: 'humanVerify' | 'historyCard' | 'a2ui';
   /** HumanVerify 相关数据 */
   humanVerifyData?: HumanVerifyData;
   /** HistoryCard 相关数据（历史对话中的审核卡片） */
   historyCardData?: HistoryCardData;
   /** HumanVerify 提交回调 */
   onHumanVerifySubmit?: (data: HumanVerifySubmitData) => void;
+
+  // ==================== A2UI相关Props ====================
+
+  /** A2UI 消息数组（Agent 生成的声明式 UI 描述） */
+  a2uiMessages?: A2UIMessage[];
+  /** A2UI 用户交互回调 */
+  onA2UIAction?: (action: any) => void;
 }
 
 // 样式隔离容器
@@ -271,6 +280,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   humanVerifyData,
   historyCardData,
   onHumanVerifySubmit,
+  // A2UI 相关 props
+  a2uiMessages,
+  onA2UIAction,
 }) => {
   const { t } = useTranslation();
   const [modal, contextHolder] = Modal.useModal();
@@ -362,6 +374,14 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             {eventType === 'historyCard' && historyCardData && (
               <HistoryCard 
                 data={historyCardData}
+              />
+            )}
+
+            {/* A2UI 事件 - Agent 声明式 UI 渲染 */}
+            {eventType === 'a2ui' && a2uiMessages && a2uiMessages.length > 0 && (
+              <A2UISurface
+                messages={a2uiMessages}
+                onAction={onA2UIAction}
               />
             )}
             

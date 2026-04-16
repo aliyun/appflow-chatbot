@@ -76,6 +76,12 @@ export type {
   ValidationError,
 } from './components/HumanVerify';
 
+// ==================== A2UI 组件导出 ====================
+export { A2UISurface, A2UIStaticViewer } from './components/A2UIRenderer';
+
+// ==================== A2UI 组件类型导出 ====================
+export type { A2UISurfaceProps, A2UIStaticViewerProps, A2UIMessage } from './components/A2UIRenderer';
+
 // ==================== 工具函数导出 ====================
 export { loadEchartsScript } from './utils/loadEcharts';
 export { loadMermaidScript } from './utils/loadMermaid';

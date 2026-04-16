@@ -23,6 +23,8 @@
     "publish:npm": "npm run build && node scripts/publish-npm.js"
   },
   "dependencies": {
+    "@a2ui/react": "^0.8.0",
+    "@a2ui/web_core": "^0.8.0",
     "axios": "^1.7.9",
     "js-cookie": "^3.0.5",
     "katex": "^0.16.11",
