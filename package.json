@@ -1,6 +1,6 @@
 {
   "name": "@alicloud/appflow-chat",
-  "version": "0.0.4",
+  "version": "0.0.4-alpha.2",
   "description": "Appflow-Chat AI聊天机器人组件库，提供聊天服务和UI组件",
   "type": "module",
   "main": "./dist/appflow-chat.cjs.js",
@@ -40,6 +40,7 @@
     "@fortawesome/react-fontawesome": "^0.2.0"
   },
   "devDependencies": {
+    "@ant-design/x": "^1.6.1",
     "@eslint/js": "^9.13.0",
     "@types/js-cookie": "^3.0.6",
     "@types/lodash-es": "^4.17.12",

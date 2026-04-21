@@ -28,6 +28,7 @@ export { MessageBubble } from './components/MessageBubble';
 export { RichMessageBubble } from './components/RichMessageBubble';
 export { DocReferences } from './components/DocReferences';
 export { WebSearchPanel } from './components/WebSearchPanel';
+export { ChatSender } from './components/ChatSender';
 
 // ==================== UI 组件类型导出 ====================
 export type { MarkdownRendererProps } from './components/MarkdownRenderer';
@@ -40,6 +41,7 @@ export type {
 export type { RichMessageBubbleProps } from './components/RichMessageBubble';
 export type { DocReferencesProps, DocReferenceItem } from './components/DocReferences';
 export type { WebSearchPanelProps, WebSearchItem } from './components/WebSearchPanel';
+export type { ChatSenderProps, ChatSenderSubmitData, ChatAttachment } from './components/ChatSender';
 
 // ==================== Core 组件导出（纯展示组件，供高级定制） ====================
 export { BubbleContent } from './core/BubbleContent';
