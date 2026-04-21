@@ -439,7 +439,7 @@ export const ChatSender: React.FC<ChatSenderProps> = ({
   // ==================== 渲染：Actions（上传按钮） ====================
 
   const renderActions = useCallback((
-    oriNode: React.ReactNode,
+    _oriNode: React.ReactNode,
     info: { components: { SendButton: React.ComponentType<any>; ClearButton: React.ComponentType<any>; LoadingButton: React.ComponentType<any> } }
   ) => {
     const { SendButton, LoadingButton } = info.components;
