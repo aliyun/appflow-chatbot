@@ -35,6 +35,7 @@ export interface ModelInfo {
   config?: {
     image?: boolean;
     file?: boolean;
+    audio?: boolean;
     webSearch?: boolean;
     fileConfig?: string;
   };

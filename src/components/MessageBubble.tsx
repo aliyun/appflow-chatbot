@@ -7,6 +7,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import styled from 'styled-components';
 import { Modal, Image, Space } from 'antd';
+import { MessageAttachments } from './MessageAttachments';
 import { loadEchartsScript } from '@/utils/loadEcharts';
 import { DocReferences, DocReferenceItem } from './DocReferences';
 import { WebSearchPanel } from './WebSearchPanel';
@@ -47,6 +48,10 @@ export interface MessageBubbleProps {
   status?: 'Running' | 'Success' | 'Error';
   /** 参考资料列表 */
   references?: DocReferenceItem[];
+  /** 图片URL列表（用户消息中上传的图片） */
+  images?: string[];
+  /** 文件列表（用户消息中上传的文件） */
+  files?: { name: string; url: string }[];
   /** 自定义类名 */
   className?: string;
   /** 自定义样式 */
@@ -80,10 +85,8 @@ const StyledContainer = styled.div<{ $role: 'user' | 'bot' }>`
 const StyledBubble = styled.div<{ $role: 'user' | 'bot' }>`
   padding: 12px 16px;
   border-radius: 12px;
-  background: ${props => props.$role === 'user' 
-    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' 
-    : 'rgba(205, 208, 220, 0.15)'};
-  color: ${props => props.$role === 'user' ? '#fff' : '#333'};
+  background: ${props => props.$role === 'user' ? '#e5effe' : 'rgba(205, 208, 220, 0.15)'};
+  color: '#333';
   word-break: break-word;
   
   /* 样式隔离 */
@@ -178,7 +181,7 @@ const StyledBubble = styled.div<{ $role: 'user' | 'bot' }>`
     border-radius: 4px;
   }
 
-  a {
+  a:not(.appflow-file-card) {
     color: ${props => props.$role === 'user' ? '#fff' : '#1890ff'};
     text-decoration: underline;
   }
@@ -261,6 +264,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   role = 'bot',
   status = 'Success',
   references = [],
+  images,
+  files,
   className,
   style,
   onReferenceClick,
@@ -375,6 +380,14 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
               </ReferencesContainer>
             )}
           </BubbleContent>
+
+          {/* 附件展示区域：图片和文件 */}
+          <MessageAttachments 
+            role={role} 
+            images={images} 
+            files={files} 
+          />
+
           {contextHolder}
         </StyledBubble>
       </StyledContainer>

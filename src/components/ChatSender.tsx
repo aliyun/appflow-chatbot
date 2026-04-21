@@ -1,18 +1,17 @@
 /**
  * ChatSender - 聊天输入框组件
- * 封装 @ant-design/x 的 Sender + Attachments，集成文件上传、语音输入、联网搜索、模型选择等能力
  */
 
-import React, { useState, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { Sender, Attachments } from '@ant-design/x';
 import type { AttachmentsProps } from '@ant-design/x';
-import { Select, Switch, Button, Tooltip, Badge } from 'antd';
+import { Select, Switch, Button, Tooltip } from 'antd';
 import {
   PaperClipOutlined,
   PictureOutlined,
   GlobalOutlined,
-  DeleteOutlined,
   CloudUploadOutlined,
+  AudioOutlined,
 } from '@ant-design/icons';
 import styled from 'styled-components';
 import type { ModelInfo, ModelCapabilities } from '../services/ChatService';
@@ -58,8 +57,10 @@ export interface ChatSenderSubmitData {
   text: string;
   /** 图片URL列表 */
   images: string[];
-  /** 文件URL列表 */
-  files: string[];
+  /** 文件列表（包含文件名和URL） */
+  files: { name: string; url: string }[];
+  /** 语音文件URL（录音上传后的下载地址） */
+  audio?: string;
   /** 选中的模型ID */
   modelId?: string;
   /** 是否启用联网搜索 */
@@ -78,7 +79,7 @@ export interface ChatSenderProps {
 
   // ==================== 模型相关 ====================
 
-  /** 可用模型列表 */
+  /** 可用模型列表，传入且长度>1时显示模型选择下拉框 */
   models?: ModelInfo[];
   /** 当前选中的模型ID */
   modelId?: string;
@@ -91,7 +92,7 @@ export interface ChatSenderProps {
 
   /**
    * 模型能力配置，控制功能按钮的显隐
-   * 如果不传，所有功能按钮都显示
+   * 不传时默认所有功能关闭
    */
   capabilities?: ModelCapabilities;
 
@@ -101,8 +102,6 @@ export interface ChatSenderProps {
   onSubmit?: (data: ChatSenderSubmitData) => void;
   /** 取消当前请求 */
   onCancel?: () => void;
-  /** 清除会话回调 */
-  onClear?: () => void;
   /** 文件上传方法，返回下载URL */
   onUpload?: (file: File) => Promise<string>;
 
@@ -117,18 +116,6 @@ export interface ChatSenderProps {
 // ==================== 样式组件 ====================
 
 const SenderWrapper = styled.div`
-  .appflow-chat-sender-prefix {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .appflow-chat-sender-actions {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-
   .appflow-chat-sender-footer {
     display: flex;
     align-items: center;
@@ -139,27 +126,103 @@ const SenderWrapper = styled.div`
   .appflow-chat-sender-footer-left {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
   }
 
   .appflow-chat-sender-footer-right {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
+  }
+
+  .appflow-chat-sender-model-select {
+    min-width: 100px;
+  }
+
+  .appflow-chat-sender-separator {
+    width: 1px;
+    height: 16px;
+    background: #e0e0e0;
+    margin: 0 2px;
   }
 
   .appflow-chat-sender-web-search {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 4px;
     font-size: 13px;
     color: #666;
-  }
+    padding: 2px 6px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+    user-select: none;
 
-  .appflow-chat-sender-model-select {
-    min-width: 120px;
+    &:hover {
+      background: rgba(0, 0, 0, 0.04);
+    }
   }
 `;
+
+// ==================== 录音中波形图标 ====================
+
+/** 录音中的波形动画图标（复用 @ant-design/x 的 RecordingIcon 设计） */
+const RecordingIcon: React.FC = () => {
+  const SIZE = 1000;
+  const COUNT = 4;
+  const RECT_WIDTH = 140;
+  const RECT_RADIUS = RECT_WIDTH / 2;
+  const RECT_HEIGHT_MIN = 250;
+  const RECT_HEIGHT_MAX = 500;
+  const DURATION = 0.8;
+
+  return (
+    <svg
+      width="1em"
+      height="1em"
+      viewBox={`0 0 ${SIZE} ${SIZE}`}
+      xmlns="http://www.w3.org/2000/svg"
+      fill="currentColor"
+    >
+      {Array.from({ length: COUNT }).map((_, index) => {
+        const dest = (SIZE - RECT_WIDTH * COUNT) / (COUNT - 1);
+        const x = index * (dest + RECT_WIDTH);
+        const yMin = SIZE / 2 - RECT_HEIGHT_MIN / 2;
+        const yMax = SIZE / 2 - RECT_HEIGHT_MAX / 2;
+        return (
+          <rect
+            key={index}
+            fill="currentColor"
+            rx={RECT_RADIUS}
+            ry={RECT_RADIUS}
+            height={RECT_HEIGHT_MIN}
+            width={RECT_WIDTH}
+            x={x}
+            y={yMin}
+          >
+            <animate
+              attributeName="height"
+              values={`${RECT_HEIGHT_MIN}; ${RECT_HEIGHT_MAX}; ${RECT_HEIGHT_MIN}`}
+              keyTimes="0; 0.5; 1"
+              dur={`${DURATION}s`}
+              begin={`${(DURATION / COUNT) * index}s`}
+              repeatCount="indefinite"
+            />
+            <animate
+              attributeName="y"
+              values={`${yMin}; ${yMax}; ${yMin}`}
+              keyTimes="0; 0.5; 1"
+              dur={`${DURATION}s`}
+              begin={`${(DURATION / COUNT) * index}s`}
+              repeatCount="indefinite"
+            />
+          </rect>
+        );
+      })}
+    </svg>
+  );
+};
 
 // ==================== 工具函数 ====================
 
@@ -206,7 +269,6 @@ export const ChatSender: React.FC<ChatSenderProps> = ({
   capabilities,
   onSubmit,
   onCancel,
-  onClear,
   onUpload,
   className,
   style,
@@ -218,18 +280,23 @@ export const ChatSender: React.FC<ChatSenderProps> = ({
     defaultModelId || models[0]?.id
   );
   const [webSearchEnabled, setWebSearchEnabled] = useState(false);
+  const [speechRecording, setSpeechRecording] = useState(false);
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
   const [headerOpen, setHeaderOpen] = useState(false);
 
   const attachmentsRef = useRef<AttachmentsRefType>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const speechRecordingRef = useRef(false);
 
   // 受控/非受控模型ID
   const currentModelId = controlledModelId ?? internalModelId;
 
   // ==================== 能力判断 ====================
 
-  const hasImageCapability = capabilities?.image ?? true;
-  const hasFileCapability = capabilities?.file ?? true;
+  const hasImageCapability = capabilities?.image ?? false;
+  const hasFileCapability = capabilities?.file ?? false;
   const hasAudioCapability = capabilities?.audio ?? false;
   const hasWebSearchCapability = capabilities?.webSearch ?? false;
 
@@ -286,12 +353,13 @@ export const ChatSender: React.FC<ChatSenderProps> = ({
 
     const files = attachments
       .filter(a => a.type === 'file' && a.status === 'done' && a.url)
-      .map(a => a.url!);
+      .map(a => ({ name: a.name, url: a.url! }));
 
     onSubmit?.({
       text: text.trim(),
       images,
       files,
+      audio: undefined,
       modelId: currentModelId,
       webSearch: webSearchEnabled,
     });
@@ -362,7 +430,13 @@ export const ChatSender: React.FC<ChatSenderProps> = ({
         <Attachments
           ref={attachmentsRef as any}
           items={attachmentItems as AttachmentsProps['items']}
-          beforeUpload={() => false}
+          accept={acceptTypes}
+          multiple
+          customRequest={({ file }) => {
+            if (file instanceof File) {
+              handleFileUpload(file);
+            }
+          }}
           onRemove={(file) => {
             setAttachments(prev => {
               const updated = prev.filter(a => a.uid !== file.uid);
@@ -382,11 +456,115 @@ export const ChatSender: React.FC<ChatSenderProps> = ({
     );
   }, [hasUploadCapability, headerOpen, attachmentItems]);
 
-  // ==================== 渲染：Footer（模型选择 + 联网搜索 + 清除） ====================
+  // ==================== 触发文件选择 ====================
 
-  const renderFooter = useMemo(() => {
-    const hasFooterContent = models.length > 1 || hasWebSearchCapability || onClear;
-    if (!hasFooterContent) return undefined;
+  const triggerFileSelect = useCallback(() => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = acceptTypes;
+    input.multiple = true;
+    input.onchange = (event) => {
+      const fileList = (event.target as HTMLInputElement).files;
+      if (fileList) {
+        Array.from(fileList).forEach(handleFileUpload);
+      }
+    };
+    input.click();
+  }, [acceptTypes, handleFileUpload]);
+
+  // ==================== 语音录音管理 ====================
+  // 使用 MediaRecorder 录制音频文件，录音结束后上传并发送
+
+  const stopMediaStream = useCallback(() => {
+    mediaStreamRef.current?.getTracks().forEach(track => track.stop());
+    mediaStreamRef.current = null;
+  }, []);
+
+  const toggleSpeechRecording = useCallback(async () => {
+    if (speechRecordingRef.current) {
+      // 停止录音 — MediaRecorder.onstop 中会处理上传和发送
+      mediaRecorderRef.current?.stop();
+      speechRecordingRef.current = false;
+      setSpeechRecording(false);
+    } else {
+      // 开始录音
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaStreamRef.current = stream;
+        audioChunksRef.current = [];
+
+        const mediaRecorder = new MediaRecorder(stream);
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            audioChunksRef.current.push(event.data);
+          }
+        };
+
+        mediaRecorder.onstop = async () => {
+          // 停止麦克风流
+          stopMediaStream();
+
+          const chunks = audioChunksRef.current;
+          if (chunks.length === 0 || !onUpload) return;
+
+          // 合并音频 chunks 为 Blob
+          const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+          const audioFile = new File(
+            [audioBlob],
+            `recording_${Date.now()}.webm`,
+            { type: 'audio/webm' }
+          );
+
+          try {
+            // 上传音频文件
+            const audioUrl = await onUpload(audioFile);
+
+            // 发送语音消息（audio 优先级最高，服务端会忽略 text/images/files）
+            onSubmit?.({
+              text: '',
+              images: [],
+              files: [],
+              audio: audioUrl,
+              modelId: currentModelId,
+              webSearch: false,
+            });
+          } catch (err) {
+            console.error('语音上传失败:', err);
+          }
+        };
+
+        mediaRecorder.onerror = () => {
+          speechRecordingRef.current = false;
+          setSpeechRecording(false);
+          stopMediaStream();
+        };
+
+        mediaRecorderRef.current = mediaRecorder;
+        mediaRecorder.start();
+        speechRecordingRef.current = true;
+        setSpeechRecording(true);
+      } catch (err) {
+        console.error('无法获取麦克风权限:', err);
+        speechRecordingRef.current = false;
+        setSpeechRecording(false);
+      }
+    }
+  }, [onUpload, onSubmit, inputValue, currentModelId, webSearchEnabled, stopMediaStream]);
+
+  // 组件卸载时停止录音和麦克风流
+  useEffect(() => {
+    return () => {
+      mediaRecorderRef.current?.stop();
+      stopMediaStream();
+    };
+  }, [stopMediaStream]);
+
+  // ==================== 渲染：Footer（功能栏） ====================
+  // 布局：左侧 [模型选择] [联网搜索]   右侧 [文件上传] [语音] [发送/停止]
+
+  const renderFooter = useCallback((info: any) => {
+    const { SendButton, LoadingButton } = info.components;
 
     return (
       <div className="appflow-chat-sender-footer">
@@ -406,7 +584,10 @@ export const ChatSender: React.FC<ChatSenderProps> = ({
 
           {/* 联网搜索开关 */}
           {hasWebSearchCapability && (
-            <div className="appflow-chat-sender-web-search">
+            <div
+              className="appflow-chat-sender-web-search"
+              onClick={() => setWebSearchEnabled(prev => !prev)}
+            >
               <GlobalOutlined />
               <Switch
                 size="small"
@@ -419,73 +600,53 @@ export const ChatSender: React.FC<ChatSenderProps> = ({
         </div>
 
         <div className="appflow-chat-sender-footer-right">
-          {/* 清除会话 */}
-          {onClear && (
-            <Tooltip title="清除会话">
-              <Button
-                type="text"
-                size="small"
-                icon={<DeleteOutlined />}
-                onClick={onClear}
-                disabled={loading}
-              />
-            </Tooltip>
-          )}
-        </div>
-      </div>
-    );
-  }, [models, currentModelId, handleModelChange, hasWebSearchCapability, webSearchEnabled, onClear, loading]);
-
-  // ==================== 渲染：Actions（上传按钮） ====================
-
-  const renderActions = useCallback((
-    _oriNode: React.ReactNode,
-    info: { components: { SendButton: React.ComponentType<any>; ClearButton: React.ComponentType<any>; LoadingButton: React.ComponentType<any> } }
-  ) => {
-    const { SendButton, LoadingButton } = info.components;
-
-    return (
-      <div className="appflow-chat-sender-actions">
-        {/* 上传按钮 */}
-        {hasUploadCapability && (
-          <Tooltip title={hasAttachments ? `${attachments.length} 个附件` : '上传文件'}>
-            <Badge count={attachments.length} size="small" offset={[-4, 4]}>
+          {/* 文件上传按钮 */}
+          {hasUploadCapability && (
+            <Tooltip title="上传文件">
               <Button
                 type="text"
                 size="small"
                 icon={hasImageCapability && !hasFileCapability ? <PictureOutlined /> : <PaperClipOutlined />}
                 disabled={disabled || loading}
-                onClick={() => {
-                  // 触发文件选择
-                  const input = document.createElement('input');
-                  input.type = 'file';
-                  input.accept = acceptTypes;
-                  input.multiple = true;
-                  input.onchange = (e) => {
-                    const fileList = (e.target as HTMLInputElement).files;
-                    if (fileList) {
-                      Array.from(fileList).forEach(handleFileUpload);
-                    }
-                  };
-                  input.click();
-                }}
+                onClick={triggerFileSelect}
               />
-            </Badge>
-          </Tooltip>
-        )}
+            </Tooltip>
+          )}
 
-        {/* 发送/停止按钮 */}
-        {loading ? (
-          <LoadingButton />
-        ) : (
-          <SendButton disabled={disabled || isUploading || (!inputValue.trim() && !hasAttachments)} />
-        )}
+          {/* 分隔线 */}
+          {hasUploadCapability && hasAudioCapability && (
+            <div className="appflow-chat-sender-separator" />
+          )}
+
+          {/* 语音按钮 */}
+          {hasAudioCapability && (
+            <Tooltip title={speechRecording ? '停止录音' : '语音输入'}>
+              <Button
+                type="text"
+                size="small"
+                icon={speechRecording ? <RecordingIcon /> : <AudioOutlined />}
+                disabled={disabled}
+                onClick={toggleSpeechRecording}
+              />
+            </Tooltip>
+          )}
+
+          {/* 发送/停止按钮 */}
+          {loading ? (
+            <LoadingButton />
+          ) : (
+            <SendButton disabled={disabled || isUploading || (!inputValue.trim() && !hasAttachments)} />
+          )}
+        </div>
       </div>
     );
   }, [
     hasUploadCapability, hasImageCapability, hasFileCapability,
-    hasAttachments, attachments.length, acceptTypes,
-    disabled, loading, isUploading, inputValue, handleFileUpload,
+    hasAttachments, attachments.length, triggerFileSelect,
+    models, currentModelId, handleModelChange,
+    hasWebSearchCapability, webSearchEnabled,
+    hasAudioCapability, speechRecording, toggleSpeechRecording,
+    disabled, loading, isUploading, inputValue,
   ]);
 
   // ==================== 主渲染 ====================
@@ -502,10 +663,10 @@ export const ChatSender: React.FC<ChatSenderProps> = ({
         submitType={submitType}
         onCancel={onCancel}
         onPasteFile={hasUploadCapability ? handlePasteFile : undefined}
-        allowSpeech={hasAudioCapability}
+        allowSpeech={false}
         header={renderHeader}
         footer={renderFooter}
-        actions={renderActions}
+        actions={false}
         autoSize={{ minRows: 1, maxRows: 6 }}
         readOnly={isUploading}
       />
