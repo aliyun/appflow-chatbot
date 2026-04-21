@@ -41,13 +41,23 @@ const ImageCard = styled.div<{ $role: 'user' | 'bot' }>`
   display: inline-flex;
   flex-direction: column;
   gap: 6px;
-  max-width: 200px;
+  max-width: 180px;
   color: #333;
 
   .image-preview {
     border-radius: 6px;
     overflow: hidden;
     cursor: pointer;
+
+    .ant-image {
+      display: block;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
   }
 `;
 
@@ -67,7 +77,8 @@ const FileCard = styled.a<{ $role: 'user' | 'bot' }>`
   text-decoration: none;
   color: #333;
   transition: background 0.2s;
-  max-width: 280px;
+  max-width: 100%;
+  box-sizing: border-box;
 
   &:hover {
     background: ${props => props.$role === 'user' ? '#e2e5ff' : '#d6ecf8'};

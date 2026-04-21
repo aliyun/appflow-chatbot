@@ -88,6 +88,7 @@ const StyledBubble = styled.div<{ $role: 'user' | 'bot' }>`
   background: ${props => props.$role === 'user' ? '#e5effe' : 'rgba(205, 208, 220, 0.15)'};
   color: '#333';
   word-break: break-word;
+  overflow: hidden;
   
   /* 样式隔离 */
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
