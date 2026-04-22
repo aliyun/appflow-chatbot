@@ -52,6 +52,8 @@ export interface MessageBubbleProps {
   images?: string[];
   /** 文件列表（用户消息中上传的文件） */
   files?: { name: string; url: string }[];
+  /** 语音消息URL */
+  audio?: string;
   /** 自定义类名 */
   className?: string;
   /** 自定义样式 */
@@ -267,6 +269,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   references = [],
   images,
   files,
+  audio,
   className,
   style,
   onReferenceClick,
@@ -348,45 +351,48 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         style={style}
       >
         <StyledBubble $role={role}>
-          {/* 使用核心组件渲染内容 */}
-          <BubbleContent 
-            content={content} 
-            status={status} 
-            role={role}
-          >
-            {/* HumanVerify事件 - 人工审核表单 */}
-            {eventType === 'humanVerify' && humanVerifyData && (
-              <HumanVerify 
-                data={humanVerifyData}
-                onSubmit={onHumanVerifySubmit}
-              />
-            )}
-            
-            {/* HistoryCard 事件 - 历史对话中的审核卡片 */}
-            {eventType === 'historyCard' && historyCardData && (
-              <HistoryCard 
-                data={historyCardData}
-              />
-            )}
-            
-            {/* 参考资料 */}
-            {references && references.length > 0 && status === 'Success' && (
-              <ReferencesContainer>
-                <DocReferences
-                  items={references}
-                  status={status}
-                  onItemClick={handleReferenceClick}
-                  onWebSearchClick={handleWebSearchClick}
+          {/* 使用核心组件渲染内容（语音消息且无文本时跳过，避免显示加载动画） */}
+          {!(audio && !content) && (
+            <BubbleContent 
+              content={content} 
+              status={status} 
+              role={role}
+            >
+              {/* HumanVerify事件 - 人工审核表单 */}
+              {eventType === 'humanVerify' && humanVerifyData && (
+                <HumanVerify 
+                  data={humanVerifyData}
+                  onSubmit={onHumanVerifySubmit}
                 />
-              </ReferencesContainer>
-            )}
-          </BubbleContent>
+              )}
+              
+              {/* HistoryCard 事件 - 历史对话中的审核卡片 */}
+              {eventType === 'historyCard' && historyCardData && (
+                <HistoryCard 
+                  data={historyCardData}
+                />
+              )}
+              
+              {/* 参考资料 */}
+              {references && references.length > 0 && status === 'Success' && (
+                <ReferencesContainer>
+                  <DocReferences
+                    items={references}
+                    status={status}
+                    onItemClick={handleReferenceClick}
+                    onWebSearchClick={handleWebSearchClick}
+                  />
+                </ReferencesContainer>
+              )}
+            </BubbleContent>
+          )}
 
-          {/* 附件展示区域：图片和文件 */}
+          {/* 附件展示区域：语音、图片和文件 */}
           <MessageAttachments 
             role={role} 
             images={images} 
-            files={files} 
+            files={files}
+            audio={audio}
           />
 
           {contextHolder}
