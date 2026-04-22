@@ -696,6 +696,23 @@ class ChatService {
         // 处理消息列表
         if (Array.isArray(data)) {
           for (const item of data) {
+            // 注意：接口返回数据是倒序的（最新在前），最终会 reverse()
+            // 因此这里先推入 AI 回复，再推入用户消息，reverse() 后顺序变为 user → assistant
+
+            // AI回复 - 在 assistant 数组中
+            if (item.assistant && Array.isArray(item.assistant) && item.assistant.length > 0) {
+              // 取第一个assistant回复
+              const assistantMsg = item.assistant[0];
+              messages.push({
+                id: assistantMsg.messageId || `assistant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                role: 'assistant',
+                content: assistantMsg.content || '',
+                messageType: assistantMsg.messageType || 'text',
+                gmtCreate: item.gmtCreate,
+                sessionId: assistantMsg.sessionId || item.sessionId,
+              });
+            }
+
             // 用户消息 - 在 message 字段中
             if (item.message !== undefined && item.message !== null) {
               const messageType = item.messageType || 'text';
@@ -743,20 +760,6 @@ class ChatService {
                 images,
                 files,
                 audio: isAudioMessage ? content : undefined,
-              });
-            }
-
-            // AI回复 - 在 assistant 数组中
-            if (item.assistant && Array.isArray(item.assistant) && item.assistant.length > 0) {
-              // 取第一个assistant回复
-              const assistantMsg = item.assistant[0];
-              messages.push({
-                id: assistantMsg.messageId || `assistant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                role: 'assistant',
-                content: assistantMsg.content || '',
-                messageType: assistantMsg.messageType || 'text',
-                gmtCreate: item.gmtCreate,
-                sessionId: assistantMsg.sessionId || item.sessionId,
               });
             }
           }
