@@ -757,7 +757,8 @@ class ChatService {
           }
         }
 
-        return messages;
+        // 接口返回的数据是倒序的（最新的在前），需要反转为正序（最早的在前）
+        return messages.reverse();
       }
 
       return [];
