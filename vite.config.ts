@@ -51,6 +51,8 @@ export default defineConfig({
         /^antd\//,
         '@ant-design/icons',
         /^@ant-design\/icons\//,
+        '@ant-design/x',
+        /^@ant-design\/x\//,
       ],
       output: {
         globals: {
@@ -59,6 +61,7 @@ export default defineConfig({
           'react/jsx-runtime': 'jsxRuntime',
           antd: 'antd',
           '@ant-design/icons': 'icons',
+          '@ant-design/x': 'antdX',
           'styled-components': 'styled',
           'katex': 'katex',
           'rehype-katex': 'rehypeKatex',

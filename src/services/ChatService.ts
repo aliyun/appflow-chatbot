@@ -270,16 +270,18 @@ class ChatService {
     this.sendMessage(message, callbacks);
 
     // 返回链式调用对象
-    return {
+    const stream: ChatStream = {
       onMessage: (callback) => {
         callbacks.onMessage = callback;
-        return this as unknown as ChatStream;
+        return stream;
       },
       onError: (callback) => {
         callbacks.onError = callback;
-        return this as unknown as ChatStream;
+        return stream;
       }
     };
+
+    return stream;
   }
 
   /**
