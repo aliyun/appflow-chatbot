@@ -8,6 +8,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import styled from 'styled-components';
 import { Modal, Image, Space } from 'antd';
 import { MessageAttachments } from './MessageAttachments';
+import { AudioPlayer } from './AudioPlayer';
 import { loadEchartsScript } from '@/utils/loadEcharts';
 import { DocReferences, DocReferenceItem } from './DocReferences';
 import { WebSearchPanel } from './WebSearchPanel';
@@ -343,6 +344,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   const handleReferenceClick = onReferenceClick || defaultReferenceClick;
   const handleWebSearchClick = onWebSearchClick || defaultWebSearchClick;
 
+  // 纯语音消息：跳过 StyledBubble 包裹，直接渲染 AudioPlayer
+  const isAudioOnly = !!(audio && !content);
+
   return (
     <>
       <StyledContainer 
@@ -350,9 +354,12 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         className={`appflow-sdk-message-bubble ${className || ''}`} 
         style={style}
       >
-        <StyledBubble $role={role}>
-          {/* 使用核心组件渲染内容（语音消息且无文本时跳过，避免显示加载动画） */}
-          {!(audio && !content) && (
+        {isAudioOnly ? (
+          /* 纯语音消息：直接渲染播放器，无气泡包裹 */
+          <AudioPlayer src={audio} role={role} />
+        ) : (
+          <StyledBubble $role={role}>
+            {/* 使用核心组件渲染内容 */}
             <BubbleContent 
               content={content} 
               status={status} 
@@ -385,18 +392,17 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                 </ReferencesContainer>
               )}
             </BubbleContent>
-          )}
 
-          {/* 附件展示区域：语音、图片和文件 */}
-          <MessageAttachments 
-            role={role} 
-            images={images} 
-            files={files}
-            audio={audio}
-          />
+            {/* 附件展示区域：图片和文件 */}
+            <MessageAttachments 
+              role={role} 
+              images={images} 
+              files={files}
+            />
 
-          {contextHolder}
-        </StyledBubble>
+            {contextHolder}
+          </StyledBubble>
+        )}
       </StyledContainer>
 
       {/* 默认的网页搜索抽屉（仅在用户未传入onWebSearchClick时使用） */}

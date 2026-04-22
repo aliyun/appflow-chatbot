@@ -81,6 +81,7 @@ export interface HistoryMessage {
   sessionId?: string;
   images?: string[];
   files?: { name: string; url: string }[];
+  audio?: string;
 }
 
 export interface ChatSession {
@@ -729,15 +730,19 @@ class ChatService {
                 content = item.message;
               }
 
+              // 语音消息：messageType === 'audio' 时，message 是音频文件 URL
+              const isAudioMessage = messageType === 'audio';
+
               messages.push({
                 id: item.id || `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                 role: 'user',
-                content,
+                content: isAudioMessage ? '' : content,
                 messageType,
                 gmtCreate: item.gmtCreate,
                 sessionId: item.sessionId,
                 images,
                 files,
+                audio: isAudioMessage ? content : undefined,
               });
             }
 
