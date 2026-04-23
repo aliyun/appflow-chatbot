@@ -13,14 +13,17 @@ const mockModels: ModelInfo[] = [
 ];
 
 // 模拟上传
-const mockUpload = async (file: File): Promise<string> => {
+const mockUpload = async (file: File): Promise<{ downloadUrl: string; fileId?: string }> => {
   return new Promise((resolve) => {
     setTimeout(() => {
       // 音频文件返回 blob URL，以便本地测试播放
       if (file.type.startsWith('audio/')) {
-        resolve(URL.createObjectURL(file));
+        resolve({ downloadUrl: URL.createObjectURL(file) });
+      } else if (file.type.startsWith('image/')) {
+        resolve({ downloadUrl: `https://example.com/files/${file.name}` });
       } else {
-        resolve(`https://example.com/files/${file.name}`);
+        // 非图片文件模拟返回 fileId
+        resolve({ downloadUrl: `https://example.com/files/${file.name}`, fileId: `mock_fid_${Date.now()}` });
       }
     }, 1500);
   });

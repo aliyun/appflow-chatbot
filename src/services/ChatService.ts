@@ -53,10 +53,18 @@ export interface ModelCapabilities {
   };
 }
 
+/** 上传结果 */
+export interface UploadResult {
+  /** 文件下载URL */
+  downloadUrl: string;
+  /** 文件ID（仅文件类型有，图片无） */
+  fileId?: string;
+}
+
 export interface ChatMessage {
   text?: string;
   images?: string[];
-  files?: string[];
+  files?: Array<{ url: string; name: string; fileId?: string }>;
   audio?: string;
   modelId?: string;
   webSearch?: boolean;
@@ -330,8 +338,12 @@ class ChatService {
           richText.push({ type: 'image', mediaUrl: url });
         });
 
-        message.files?.forEach(url => {
-          richText.push({ type: 'file', mediaUrl: url });
+        message.files?.forEach(fileItem => {
+          const entry: any = { type: 'file', mediaUrl: fileItem.url };
+          if (fileItem.fileId) {
+            entry.mediaId = fileItem.fileId;
+          }
+          richText.push(entry);
         });
 
         requestBody.richText = richText;
@@ -453,105 +465,120 @@ class ChatService {
   }
 
   /**
-   * 上传文件
+   * 发送上传事件（通用方法）
+   * 封装向服务端发送上传相关事件的SSE请求逻辑，支持 uploadToken 和 uploadFile 两种事件类型
+   * @param eventType 事件类型：'uploadToken' 获取预签名URL | 'uploadFile' 获取文件ID
+   * @param fileName 文件名
+   * @param extraData 额外数据（如 uploadFile 时需要传 content: downloadUrl）
    */
-  async upload(file: File): Promise<string> {
+  private async sendUploadEvent(
+    eventType: 'uploadToken' | 'uploadFile',
+    fileName: string,
+    extraData?: Record<string, any>
+  ): Promise<any> {
+    const domain = this.setupConfig?.domain || '';
+    const integrateId = this.config?.integrateId || '';
+    const { token, ticket } = await this.getRequestToken();
+
+    const eventContent: any = { fileName, ...extraData };
+
+    const response = await fetch(`${domain}/webhook/chatbot/chat/${integrateId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Request-Token': token,
+        'X-Account-Session-Ticket': ticket,
+      },
+      body: JSON.stringify({
+        messageType: 'event',
+        event: {
+          eventType,
+          content: JSON.stringify(eventContent)
+        }
+      })
+    });
+
+    // 解析SSE响应
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error('无法读取响应');
+
+    let result: any = null;
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+
+      // 保留最后一行（可能不完整）
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmedLine = line.trim();
+        if (trimmedLine.startsWith('data:')) {
+          try {
+            const jsonStr = trimmedLine.slice(5).trim();
+            if (jsonStr) {
+              const data = JSON.parse(jsonStr);
+              if (data.content) {
+                // content 可能是字符串或对象
+                const contentData = typeof data.content === 'string'
+                  ? JSON.parse(data.content)
+                  : data.content;
+                result = contentData;
+              }
+            }
+          } catch (e) {
+            console.debug(`解析SSE行失败(${eventType}):`, line, e);
+          }
+        }
+      }
+    }
+
+    // 处理buffer中剩余的数据
+    if (buffer.trim().startsWith('data:')) {
+      try {
+        const jsonStr = buffer.trim().slice(5).trim();
+        if (jsonStr) {
+          const data = JSON.parse(jsonStr);
+          if (data.content) {
+            const contentData = typeof data.content === 'string'
+              ? JSON.parse(data.content)
+              : data.content;
+            result = contentData;
+          }
+        }
+      } catch (e) {
+        console.debug(`解析SSE剩余数据失败(${eventType}):`, buffer, e);
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * 上传文件
+   * 非图片文件会额外获取 fileId（用于服务端文件关联）
+   * @returns 上传结果，包含 downloadUrl 和可选的 fileId
+   */
+  async upload(file: File): Promise<UploadResult> {
     if (!this.isInitialized) {
       throw new Error('请先调用 setup() 初始化SDK');
     }
 
-    const domain = this.setupConfig?.domain || '';
-    const integrateId = this.config?.integrateId || '';
-
     try {
-      const { token, ticket } = await this.getRequestToken();
-
-      // 获取上传预签名URL
-      const uploadTokenResponse = await fetch(`${domain}/webhook/chatbot/chat/${integrateId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Request-Token': token,
-          'X-Account-Session-Ticket': ticket,
-        },
-        body: JSON.stringify({
-          messageType: 'event',
-          event: {
-            eventType: 'uploadToken',
-            content: JSON.stringify({ fileName: file.name })
-          }
-        })
-      });
-
-      // 解析SSE响应获取上传URL
-      const reader = uploadTokenResponse.body?.getReader();
-      if (!reader) throw new Error('无法读取响应');
-
-      let uploadInfo: any = null;
-      const decoder = new TextDecoder();
-      let buffer = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-
-        // 保留最后一行（可能不完整）
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          const trimmedLine = line.trim();
-          if (trimmedLine.startsWith('data:')) {
-            try {
-              const jsonStr = trimmedLine.slice(5).trim();
-              if (jsonStr) {
-                const data = JSON.parse(jsonStr);
-                if (data.content) {
-                  // content 可能是字符串或对象
-                  const contentData = typeof data.content === 'string'
-                    ? JSON.parse(data.content)
-                    : data.content;
-                  if (contentData.uploadUrl) {
-                    uploadInfo = contentData;
-                  }
-                }
-              }
-            } catch (e) {
-              // 忽略解析错误，继续处理下一行
-              console.debug('解析SSE行失败:', line, e);
-            }
-          }
-        }
-      }
-
-      // 处理buffer中剩余的数据
-      if (buffer.trim().startsWith('data:')) {
-        try {
-          const jsonStr = buffer.trim().slice(5).trim();
-          if (jsonStr) {
-            const data = JSON.parse(jsonStr);
-            if (data.content) {
-              const contentData = typeof data.content === 'string'
-                ? JSON.parse(data.content)
-                : data.content;
-              if (contentData.uploadUrl) {
-                uploadInfo = contentData;
-              }
-            }
-          }
-        } catch (e) {
-          console.debug('解析SSE剩余数据失败:', buffer, e);
-        }
-      }
+      // 1. 获取上传预签名URL
+      const uploadInfo = await this.sendUploadEvent('uploadToken', file.name);
 
       if (!uploadInfo?.uploadUrl) {
         console.error('获取上传URL失败，uploadInfo:', uploadInfo);
         throw new Error('获取上传URL失败');
       }
 
-      // 上传文件
+      // 2. 上传文件到OSS
       const blob = new Blob([file], { type: file.type || 'application/octet-stream' });
       await fetchUploadApi(blob, uploadInfo.uploadUrl);
 
@@ -561,7 +588,21 @@ class ChatService {
         throw new Error('获取下载URL失败');
       }
 
-      return uploadInfo.downloadUrl;
+      // 3. 非图片文件，额外获取 fileId
+      let fileId: string | undefined;
+      const isImage = file.type.startsWith('image/');
+      if (!isImage) {
+        try {
+          const fileIdResult = await this.sendUploadEvent('uploadFile', file.name, {
+            content: uploadInfo.downloadUrl,
+          });
+          fileId = fileIdResult?.fileId;
+        } catch (e) {
+          console.warn('获取fileId失败，将继续使用downloadUrl:', e);
+        }
+      }
+
+      return { downloadUrl: uploadInfo.downloadUrl, fileId };
     } catch (error) {
       console.error('上传文件失败:', error);
       throw error;

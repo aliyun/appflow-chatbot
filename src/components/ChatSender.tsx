@@ -49,6 +49,8 @@ export interface ChatAttachment {
   thumbUrl?: string;
   /** 原始文件对象 */
   originFile?: File;
+  /** 文件ID（仅文件类型有） */
+  fileId?: string;
 }
 
 /** 提交时的消息数据 */
@@ -57,8 +59,8 @@ export interface ChatSenderSubmitData {
   text: string;
   /** 图片URL列表 */
   images: string[];
-  /** 文件列表（包含文件名和URL） */
-  files: { name: string; url: string }[];
+  /** 文件列表（包含文件名、URL和可选的fileId） */
+  files: { name: string; url: string; fileId?: string }[];
   /** 语音文件URL（录音上传后的下载地址） */
   audio?: string;
   /** 选中的模型ID */
@@ -102,8 +104,8 @@ export interface ChatSenderProps {
   onSubmit?: (data: ChatSenderSubmitData) => void;
   /** 取消当前请求 */
   onCancel?: () => void;
-  /** 文件上传方法，返回下载URL */
-  onUpload?: (file: File) => Promise<string>;
+  /** 文件上传方法，返回下载URL和可选的fileId */
+  onUpload?: (file: File) => Promise<{ downloadUrl: string; fileId?: string }>;
 
   // ==================== 样式 ====================
 
@@ -330,9 +332,9 @@ export const ChatSender: React.FC<ChatSenderProps> = ({
     setHeaderOpen(true);
 
     try {
-      const downloadUrl = await onUpload(file);
+      const result = await onUpload(file);
       setAttachments(prev =>
-        prev.map(a => a.uid === uid ? { ...a, status: 'done' as const, url: downloadUrl } : a)
+        prev.map(a => a.uid === uid ? { ...a, status: 'done' as const, url: result.downloadUrl, fileId: result.fileId } : a)
       );
     } catch {
       setAttachments(prev =>
@@ -353,7 +355,7 @@ export const ChatSender: React.FC<ChatSenderProps> = ({
 
     const files = attachments
       .filter(a => a.type === 'file' && a.status === 'done' && a.url)
-      .map(a => ({ name: a.name, url: a.url! }));
+      .map(a => ({ name: a.name, url: a.url!, fileId: a.fileId }));
 
     onSubmit?.({
       text: text.trim(),
@@ -518,14 +520,14 @@ export const ChatSender: React.FC<ChatSenderProps> = ({
 
           try {
             // 上传音频文件
-            const audioUrl = await onUpload(audioFile);
+            const result = await onUpload(audioFile);
 
             // 发送语音消息（audio 优先级最高，服务端会忽略 text/images/files）
             onSubmit?.({
               text: '',
               images: [],
               files: [],
-              audio: audioUrl,
+              audio: result.downloadUrl,
               modelId: currentModelId,
               webSearch: false,
             });

@@ -20,6 +20,7 @@ export type {
   ChatStream,
   HistoryMessage,
   ChatSession,
+  UploadResult,
 } from './services/ChatService';
 
 // ==================== UI 组件导出（简化接口，包含默认交互） ====================
