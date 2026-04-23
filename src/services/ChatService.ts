@@ -480,7 +480,27 @@ class ChatService {
     const integrateId = this.config?.integrateId || '';
     const { token, ticket } = await this.getRequestToken();
 
-    const eventContent: any = { fileName, ...extraData };
+    // uploadToken 事件：content 中包含 fileName
+    // uploadFile 事件：content 中包含 fileUrl（extraData 传入），不需要 fileName
+    const eventContent: any = eventType === 'uploadToken'
+      ? { fileName, ...extraData }
+      : { ...extraData };
+
+    const requestBody: any = {
+      messageType: 'event',
+      event: {
+        eventType,
+        content: JSON.stringify(eventContent)
+      }
+    };
+
+    // 携带 sessionId 和 chatbotModelId
+    if (this.sessionId) {
+      requestBody.sessionId = this.sessionId;
+    }
+    if (this.config?.models?.length) {
+      requestBody.chatbotModelId = this.config.models[0]?.id || '';
+    }
 
     const response = await fetch(`${domain}/webhook/chatbot/chat/${integrateId}`, {
       method: 'POST',
@@ -489,13 +509,7 @@ class ChatService {
         'X-Request-Token': token,
         'X-Account-Session-Ticket': ticket,
       },
-      body: JSON.stringify({
-        messageType: 'event',
-        event: {
-          eventType,
-          content: JSON.stringify(eventContent)
-        }
-      })
+      body: JSON.stringify(requestBody)
     });
 
     // 解析SSE响应
@@ -594,7 +608,7 @@ class ChatService {
       if (!isImage) {
         try {
           const fileIdResult = await this.sendUploadEvent('uploadFile', file.name, {
-            content: uploadInfo.downloadUrl,
+            fileUrl: uploadInfo.downloadUrl,
           });
           fileId = fileIdResult?.fileId;
         } catch (e) {
