@@ -5,7 +5,7 @@
 import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { Sender, Attachments } from '@ant-design/x';
 import type { AttachmentsProps } from '@ant-design/x';
-import { Select, Switch, Button, Tooltip } from 'antd';
+import { Select, Switch, Button, Tooltip, Spin } from 'antd';
 import {
   PaperClipOutlined,
   PictureOutlined,
@@ -429,34 +429,36 @@ export const ChatSender: React.FC<ChatSenderProps> = ({
           content: { padding: 4 },
         }}
       >
-        <Attachments
-          ref={attachmentsRef as any}
-          items={attachmentItems as AttachmentsProps['items']}
-          accept={acceptTypes}
-          multiple
-          customRequest={({ file }) => {
-            if (file instanceof File) {
-              handleFileUpload(file);
-            }
-          }}
-          onRemove={(file) => {
-            setAttachments(prev => {
-              const updated = prev.filter(a => a.uid !== file.uid);
-              if (updated.length === 0) {
-                setHeaderOpen(false);
+        <Spin spinning={isUploading} tip="文件上传中，请稍候...">
+          <Attachments
+            ref={attachmentsRef as any}
+            items={attachmentItems as AttachmentsProps['items']}
+            accept={acceptTypes}
+            multiple
+            customRequest={({ file }) => {
+              if (file instanceof File) {
+                handleFileUpload(file);
               }
-              return updated;
-            });
-          }}
-          placeholder={{
-            icon: <CloudUploadOutlined />,
-            title: '拖拽文件到此处',
-            description: '支持图片和文件',
-          }}
-        />
+            }}
+            onRemove={(file) => {
+              setAttachments(prev => {
+                const updated = prev.filter(a => a.uid !== file.uid);
+                if (updated.length === 0) {
+                  setHeaderOpen(false);
+                }
+                return updated;
+              });
+            }}
+            placeholder={{
+              icon: <CloudUploadOutlined />,
+              title: '拖拽文件到此处',
+              description: '支持图片和文件',
+            }}
+          />
+        </Spin>
       </Sender.Header>
     );
-  }, [hasUploadCapability, headerOpen, attachmentItems]);
+  }, [hasUploadCapability, headerOpen, attachmentItems, isUploading]);
 
   // ==================== 触发文件选择 ====================
 
