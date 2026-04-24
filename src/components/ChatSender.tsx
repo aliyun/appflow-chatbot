@@ -105,7 +105,7 @@ export interface ChatSenderProps {
   /** 取消当前请求 */
   onCancel?: () => void;
   /** 文件上传方法，返回下载URL和可选的fileId */
-  onUpload?: (file: File) => Promise<{ downloadUrl: string; fileId?: string }>;
+  onUpload?: (file: File, modelId?: string) => Promise<{ downloadUrl: string; fileId?: string }>;
 
   // ==================== 样式 ====================
 
@@ -332,7 +332,7 @@ export const ChatSender: React.FC<ChatSenderProps> = ({
     setHeaderOpen(true);
 
     try {
-      const result = await onUpload(file);
+      const result = await onUpload(file, currentModelId);
       setAttachments(prev =>
         prev.map(a => a.uid === uid ? { ...a, status: 'done' as const, url: result.downloadUrl, fileId: result.fileId } : a)
       );
@@ -341,7 +341,7 @@ export const ChatSender: React.FC<ChatSenderProps> = ({
         prev.map(a => a.uid === uid ? { ...a, status: 'error' as const } : a)
       );
     }
-  }, [onUpload, hasImageCapability, hasFileCapability]);
+  }, [onUpload, hasImageCapability, hasFileCapability, currentModelId]);
 
   // ==================== 提交处理 ====================
 
@@ -520,7 +520,7 @@ export const ChatSender: React.FC<ChatSenderProps> = ({
 
           try {
             // 上传音频文件
-            const result = await onUpload(audioFile);
+            const result = await onUpload(audioFile, currentModelId);
 
             // 发送语音消息（audio 优先级最高，服务端会忽略 text/images/files）
             onSubmit?.({

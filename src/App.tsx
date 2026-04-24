@@ -13,22 +13,7 @@ const mockModels: ModelInfo[] = [
 ];
 
 // 模拟上传
-const mockUpload = async (file: File): Promise<{ downloadUrl: string; fileId?: string }> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // 音频文件返回 blob URL，以便本地测试播放
-      if (file.type.startsWith('audio/')) {
-        resolve({ downloadUrl: URL.createObjectURL(file) });
-      } else if (file.type.startsWith('image/')) {
-        resolve({ downloadUrl: `https://example.com/files/${file.name}` });
-      } else {
-        // 非图片文件模拟返回 fileId
-        resolve({ downloadUrl: `https://example.com/files/${file.name}`, fileId: `mock_fid_${Date.now()}` });
-      }
-    }, 1500);
-  });
-};
-
+const mockUpload = async (file: File, _modelId?: string): Promise<{ downloadUrl: string; fileId?: string }> => {
 function App() {
   const [loading, setLoading] = useState(false);
   const [selectedModelId, setSelectedModelId] = useState(mockModels[0].id);
@@ -55,7 +40,6 @@ function App() {
     status: 'Running' | 'Success' | 'Error';
     images?: string[];
     files?: { name: string; url: string }[];
-    audio?: string;
   }
 
   const [messages, setMessages] = useState<Message[]>([]);
@@ -63,15 +47,14 @@ function App() {
   const handleSubmit = (data: ChatSenderSubmitData) => {
     addLog(`发送消息: text="${data.text}", model=${data.modelId}, images=${data.images.length}, files=${data.files.length}, audio=${data.audio || 'none'}, webSearch=${data.webSearch}`);
 
-    // 构建用户消息（包含图片、文件和语音）
+    // 构建用户消息（包含图片和文件）
     const userMsg: Message = {
       id: `msg-${Date.now()}`,
       role: 'user',
-      content: data.audio ? '' : data.text,
+      content: data.text,
       status: 'Success',
       images: data.images.length > 0 ? data.images : undefined,
       files: data.files.length > 0 ? data.files : undefined,
-      audio: data.audio || undefined,
     };
 
     // 构建 bot 占位消息
@@ -154,7 +137,6 @@ function App() {
                 status={msg.status}
                 images={msg.images}
                 files={msg.files}
-                audio={msg.audio}
               />
             ))}
           </div>

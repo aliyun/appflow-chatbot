@@ -474,7 +474,8 @@ class ChatService {
   private async sendUploadEvent(
     eventType: 'uploadToken' | 'uploadFile',
     fileName: string,
-    extraData?: Record<string, any>
+    extraData?: Record<string, any>,
+    modelId?: string
   ): Promise<any> {
     const domain = this.setupConfig?.domain || '';
     const integrateId = this.config?.integrateId || '';
@@ -494,12 +495,13 @@ class ChatService {
       }
     };
 
-    // 携带 sessionId 和 chatbotModelId
+    // 携带 sessionId 和 chatbotModelId（优先使用传入的 modelId，否则使用第一个模型）
     if (this.sessionId) {
       requestBody.sessionId = this.sessionId;
     }
-    if (this.config?.models?.length) {
-      requestBody.chatbotModelId = this.config.models[0]?.id || '';
+    const resolvedModelId = modelId || this.config?.models[0]?.id;
+    if (resolvedModelId) {
+      requestBody.chatbotModelId = resolvedModelId;
     }
 
     const response = await fetch(`${domain}/webhook/chatbot/chat/${integrateId}`, {
@@ -578,14 +580,14 @@ class ChatService {
    * 非图片文件会额外获取 fileId（用于服务端文件关联）
    * @returns 上传结果，包含 downloadUrl 和可选的 fileId
    */
-  async upload(file: File): Promise<UploadResult> {
+  async upload(file: File, modelId?: string): Promise<UploadResult> {
     if (!this.isInitialized) {
       throw new Error('请先调用 setup() 初始化SDK');
     }
 
     try {
       // 1. 获取上传预签名URL
-      const uploadInfo = await this.sendUploadEvent('uploadToken', file.name);
+      const uploadInfo = await this.sendUploadEvent('uploadToken', file.name, undefined, modelId);
 
       if (!uploadInfo?.uploadUrl) {
         console.error('获取上传URL失败，uploadInfo:', uploadInfo);
@@ -609,7 +611,7 @@ class ChatService {
         try {
           const fileIdResult = await this.sendUploadEvent('uploadFile', file.name, {
             fileUrl: uploadInfo.downloadUrl,
-          });
+          }, modelId);
           fileId = fileIdResult?.fileId;
         } catch (e) {
           console.warn('获取fileId失败，将继续使用downloadUrl:', e);
