@@ -14,6 +14,21 @@ const mockModels: ModelInfo[] = [
 
 // 模拟上传
 const mockUpload = async (file: File, _modelId?: string): Promise<{ downloadUrl: string; fileId?: string }> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      // 音频文件返回 blob URL，以便本地测试播放
+      if (file.type.startsWith('audio/')) {
+        resolve({ downloadUrl: URL.createObjectURL(file) });
+      } else if (file.type.startsWith('image/')) {
+        resolve({ downloadUrl: `https://example.com/files/${file.name}` });
+      } else {
+        // 非图片文件模拟返回 fileId
+        resolve({ downloadUrl: `https://example.com/files/${file.name}`, fileId: `mock_fid_${Date.now()}` });
+      }
+    }, 1500);
+  });
+};
+
 function App() {
   const [loading, setLoading] = useState(false);
   const [selectedModelId, setSelectedModelId] = useState(mockModels[0].id);
