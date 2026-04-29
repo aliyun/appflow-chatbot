@@ -14,6 +14,7 @@ import { convertTableDataToMarkdown } from './utils/dataProcessor';
 import Loading from './components/Loading';
 import Error from './components/Error';
 import Mermaid from './components/Mermaid';
+import { useTranslation } from '@/i18n';
 
 export interface MarkdownViewProps {
   /** Markdown 内容 */
@@ -32,6 +33,7 @@ export const MarkdownView: React.FC<MarkdownViewProps> = ({
   content,
   waitingMessage = '',
 }) => {
+  const { t } = useTranslation();
 
   // markdown扩展配置
   const markdownOptions: Options = useMemo(() => ({
@@ -47,7 +49,7 @@ export const MarkdownView: React.FC<MarkdownViewProps> = ({
               maxHeight: '150px',
               objectFit: 'contain',
             }}
-            src={props.src} 
+            src={props.src}
             alt={props.alt}
             preview={{ zIndex: 1100 }}
           />
@@ -57,7 +59,7 @@ export const MarkdownView: React.FC<MarkdownViewProps> = ({
         // 判断是否为行内代码
         // 行内代码没有 className，且 inline 为 true
         const isInline = inline || (!className && !node?.properties?.className);
-        
+
         if (isInline) {
           // 行内代码 - 使用简单的 <code> 标签样式
           return (
@@ -98,12 +100,12 @@ export const MarkdownView: React.FC<MarkdownViewProps> = ({
             // 检查是否是流式输出导致的解析错误
             if (!isValidJSON(String(props?.children))) {
               return (
-                <Loading text={'表格加载中...'} />
+                <Loading text={t('markdown.tableLoading')} />
               );
             }
             // 真实错误的处理
             console.error("ant_table数据解析错误:", error);
-            return <Error text={'表格数据加载失败，请检查数据格式'} />;
+            return <Error text={t('markdown.tableLoadFailed')} />;
           }
         }
 
@@ -142,7 +144,7 @@ export const MarkdownView: React.FC<MarkdownViewProps> = ({
             } catch (configError) {
               // 图表配置解析错误
               console.error("图表配置解析错误:", configError);
-              return <Error text={'图表数据加载失败，请检查数据格式'} />;
+              return <Error text={t('markdown.chartLoadFailed')} />;
             }
           } catch (error: any) {
             // 如果是流式输出导致的json解析错误，显示加载状态
@@ -152,7 +154,7 @@ export const MarkdownView: React.FC<MarkdownViewProps> = ({
 
             // 其他真实错误的处理
             console.error("图表数据解析错误:", error);
-            return <Error text={'图表数据加载失败，请检查数据格式'} />;
+            return <Error text={t('markdown.chartLoadFailed')} />;
           }
         }
 
@@ -201,7 +203,7 @@ export const MarkdownView: React.FC<MarkdownViewProps> = ({
         </a>
       ),
     },
-  }), []);
+  }), [t]);
 
   // 检查是否是完整的JSON字符串
   const isValidJSON = (str: string) => {
@@ -216,9 +218,10 @@ export const MarkdownView: React.FC<MarkdownViewProps> = ({
 
   // 将think标签转换为details标签
   const convertThinkToDetails = (content: string) => {
+    const summary = t('markdown.deepThinking');
     return content?.replace(
       /<think>([\s\S]*?)<\/think>/g,
-      '<details open><summary>深度思考</summary><pre class="think">$1</pre></details>\n\n'
+      `<details open><summary>${summary}</summary><pre class="think">$1</pre></details>\n\n`
     );
   };
 

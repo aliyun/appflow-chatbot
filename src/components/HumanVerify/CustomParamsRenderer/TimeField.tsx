@@ -3,6 +3,7 @@ import { DatePicker } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { TimeFieldProps, TimeSubType } from './types';
 import styled from 'styled-components';
+import { useTranslation } from '../../../i18n';
 
 // ==================== Styled Components ====================
 
@@ -56,6 +57,7 @@ export const TimeField: React.FC<TimeFieldProps> = ({
   onChange,
   disabled = false,
 }) => {
+  const { t } = useTranslation();
   // 优先从 AssociationPropertyMetadata.SubType 读取，取数组第一个元素
   // 兼容旧的 TimeSubType 字段
   const subType = useMemo((): TimeSubType | undefined => {
@@ -95,7 +97,7 @@ export const TimeField: React.FC<TimeFieldProps> = ({
         showTime={showTime ? { format: 'HH:mm:ss' } : false}
         disabled={disabled}
         style={{ width: '100%' }}
-        placeholder={`请选择`}
+        placeholder={t('common.placeholderSelect')}
       />
     </TimeFieldContainer>
   );

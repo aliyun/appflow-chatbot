@@ -12,6 +12,7 @@ import { loadEchartsScript } from '../utils/loadEcharts';
 import { DocReferences, DocReferenceItem } from './DocReferences';
 import { WebSearchPanel } from './WebSearchPanel';
 import { RichBubbleContent } from '../core';
+import { useTranslation } from '../i18n';
 
 export interface RichMessageBubbleProps {
   /** 消息内容 */
@@ -177,6 +178,7 @@ export const RichMessageBubble: React.FC<RichMessageBubbleProps> = ({
   onReferenceClick,
   onWebSearchClick,
 }) => {
+  const { t } = useTranslation();
   const [modal, contextHolder] = Modal.useModal();
   
   // 网页搜索抽屉状态
@@ -199,7 +201,7 @@ export const RichMessageBubble: React.FC<RichMessageBubbleProps> = ({
     modal.confirm({
       bodyStyle: { maxHeight: '80vh', overflow: 'auto' },
       icon: null,
-      title: '参考资料',
+      title: t('source.title'),
       destroyOnClose: true,
       maskClosable: true,
       closable: true,
@@ -223,7 +225,7 @@ export const RichMessageBubble: React.FC<RichMessageBubbleProps> = ({
       ),
       footer: null,
     });
-  }, [modal]);
+  }, [modal, t]);
 
   // 默认的网页搜索点击处理
   const defaultWebSearchClick = useCallback((items: DocReferenceItem[]) => {

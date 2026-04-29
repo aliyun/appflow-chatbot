@@ -3,6 +3,7 @@ import { Button } from 'antd';
 import styled from 'styled-components';
 import CustomParamsRenderer from './CustomParamsRenderer';
 import { CustomParamSchema } from './CustomParamsRenderer/types';
+import { useTranslation } from '../../i18n';
 
 // ==================== Styled Components ====================
 
@@ -114,6 +115,7 @@ export const convertSchemaToUpperCase = (schema: any): CustomParamSchema | undef
  * 用于展示历史对话中的 card 类型消息（只读模式）
  */
 export const HistoryCard: React.FC<HistoryCardProps> = ({ data }) => {
+  const { t } = useTranslation();
   // 从data中提取需要的参数
   const approvalStatus = data?.approvalStatus;
   
@@ -131,7 +133,7 @@ export const HistoryCard: React.FC<HistoryCardProps> = ({ data }) => {
         <StatusContainer $approved={isApproved}>
           <StatusContent>
             <StatusText>
-              {isApproved ? '已提交' : '待提交'}
+              {isApproved ? t('humanVerify.submitted') : t('humanVerify.pending')}
             </StatusText>
           </StatusContent>
           <Button 
@@ -139,7 +141,7 @@ export const HistoryCard: React.FC<HistoryCardProps> = ({ data }) => {
             variant="filled"
             disabled={true}
           >
-            {isApproved ? '已提交' : '提交'}
+            {isApproved ? t('humanVerify.submitted') : t('common.submit')}
           </Button>
         </StatusContainer>
       </HistoryCardContainer>
@@ -156,7 +158,7 @@ export const HistoryCard: React.FC<HistoryCardProps> = ({ data }) => {
       <StatusContainer $approved={isApproved}>
         <StatusContent>
           <StatusText>
-            {isApproved ? '已提交' : '待提交'}
+            {isApproved ? t('humanVerify.submitted') : t('humanVerify.pending')}
           </StatusText>
         </StatusContent>
         <Button 
@@ -164,7 +166,7 @@ export const HistoryCard: React.FC<HistoryCardProps> = ({ data }) => {
           variant="filled"
           disabled={true}
         >
-          {isApproved ? '已提交' : '提交'}
+          {isApproved ? t('humanVerify.submitted') : t('common.submit')}
         </Button>
       </StatusContainer>
     </HistoryCardContainer>

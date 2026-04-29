@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
 import styled from 'styled-components';
 import { ObjectFieldProps, sortPropertiesByOrder } from './types';
+import { useTranslation } from '../../../i18n';
 
 // 前向声明，避免循环依赖
 const FieldRenderer = React.lazy(() => import('./FieldRenderer'));
@@ -71,7 +72,8 @@ export const ObjectField: React.FC<ObjectFieldProps> = ({
 }) => {
   const { Title, Description, Properties, Required: RequiredFields = [] } = schema;
   const displayTitle = Title || name;
-  
+  const { t } = useTranslation();
+
   // 计算当前对象的完整路径
   const currentPath = fieldPath ? `${fieldPath}.${name}` : name;
 
@@ -108,7 +110,7 @@ export const ObjectField: React.FC<ObjectFieldProps> = ({
         {sortedProperties.map(([propertyName, propertySchema]) => {
           const isRequired = RequiredFields.includes(propertyName);
           return (
-            <React.Suspense key={propertyName} fallback={<div>加载中...</div>}>
+            <React.Suspense key={propertyName} fallback={<div>{t('common.loading')}</div>}>
               <FieldRenderer
                 name={propertyName}
                 schema={propertySchema}

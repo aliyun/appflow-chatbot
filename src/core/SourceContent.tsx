@@ -11,6 +11,7 @@ import styled from 'styled-components';
 import { Image } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { flatten, uniq } from 'lodash-es';
+import { useTranslation } from '../i18n';
 
 // 参考资料项类型
 export interface SourceItem {
@@ -195,6 +196,7 @@ export const SourceContent: React.FC<SourceContentProps> = ({
   className,
   style,
 }) => {
+  const { t } = useTranslation();
   // 提取唯一图片
   const uniqueImages = useMemo(() => {
     let images;
@@ -244,14 +246,14 @@ export const SourceContent: React.FC<SourceContentProps> = ({
       {webSearchArray.length > 0 && (
         <StyledWebSearchSource onClick={handleWebSearchClick}>
           <SearchOutlined />
-          <div>已搜索到{webSearchArray.length}个网页</div>
+          <div>{t('webSearch.foundPages', { count: webSearchArray.length })}</div>
         </StyledWebSearchSource>
       )}
 
       {/* RAG参考资料 */}
       {ragArray.length > 0 && (
         <StyledAnswerSource>
-          <StyledLabel>回答来源：</StyledLabel>
+          <StyledLabel>{t('source.answerFrom')}</StyledLabel>
           <div style={{ width: 'calc(100% - 70px)' }}>
             {ragArray.map((item, index) => (
               <SourceItemComponent
@@ -268,7 +270,7 @@ export const SourceContent: React.FC<SourceContentProps> = ({
       {/* 图片来源 */}
       {uniqueImages.length > 0 && (
         <StyledAnswerSource>
-          <StyledLabel>图片来源：</StyledLabel>
+          <StyledLabel>{t('source.imageFrom')}</StyledLabel>
           <StyledWrapSpace>
             {uniqueImages.map((image, index) => (
               <StyledImageBox key={index}>

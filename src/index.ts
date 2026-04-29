@@ -79,3 +79,28 @@ export type {
 // ==================== 工具函数导出 ====================
 export { loadEchartsScript } from './utils/loadEcharts';
 export { loadMermaidScript } from './utils/loadMermaid';
+
+// ==================== 国际化（i18n）导出 ====================
+export {
+  LocaleProvider,
+  LocaleContext,
+  useTranslation,
+  translate,
+  setGlobalLocale,
+  getGlobalLocale,
+  getGlobalLocaleName,
+} from './i18n';
+export type {
+  LocaleProviderProps,
+  LocaleContextValue,
+  UseTranslationResult,
+} from './i18n';
+
+// ==================== 国际化词条导出 ====================
+export { zhCN, enUS } from './locales';
+export type {
+  Locale,
+  TranslationKey,
+  TranslationParams,
+  DeepPartial,
+} from './locales';

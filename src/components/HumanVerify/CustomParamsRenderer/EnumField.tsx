@@ -3,6 +3,7 @@ import { Select, Checkbox, Radio } from 'antd';
 import type { RadioChangeEvent } from 'antd';
 import { EnumFieldProps, EnumDisplayStyle } from './types';
 import styled from 'styled-components';
+import { useTranslation } from '../../../i18n';
 
 const { Option } = Select;
 
@@ -70,7 +71,8 @@ export const EnumField: React.FC<EnumFieldProps> = ({
   disabled = false,
 }) => {
   const { Type } = schema;
-  
+  const { t } = useTranslation();
+
   // 优先从 AssociationPropertyMetadata 中读取，兼容旧的字段
   const enumValues = useMemo(() => {
     return schema.AssociationPropertyMetadata?.EnumValues || schema.EnumValues || [];
@@ -152,7 +154,7 @@ export const EnumField: React.FC<EnumFieldProps> = ({
               onChange={handleSelectChange}
               disabled={disabled}
               mode="multiple"
-              placeholder={`请选择`}
+              placeholder={t('common.placeholderSelect')}
               style={{ width: '100%' }}
               allowClear
             >
@@ -177,7 +179,7 @@ export const EnumField: React.FC<EnumFieldProps> = ({
               onChange={handleSelectChange}
               disabled={disabled}
               mode={isMultiple ? 'multiple' : undefined}
-              placeholder={`请选择`}
+              placeholder={t('common.placeholderSelect')}
               style={{ width: '100%' }}
               allowClear
             >
