@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useRichBubbleContext } from '@/context/RichBubble';
 import loadEchartsScript from '@/utils/loadEcharts';
+import { useTranslation } from '@/i18n';
 
 interface Iprops {
   options: any;
@@ -10,6 +11,7 @@ interface Iprops {
 export const Chart: React.FC<Iprops> = ({
   options,
 }) => {
+  const { t } = useTranslation();
   const chartContainerRef = useRef(null);
   const chartInstanceRef = useRef(null);
   const [isEchartsLoaded, setIsEchartsLoaded] = useState(false);
@@ -99,7 +101,7 @@ export const Chart: React.FC<Iprops> = ({
           color: '#666'
         }}
       >
-        图表加载中...
+        {t('markdown.chartLoading')}
       </div>
     );
   }

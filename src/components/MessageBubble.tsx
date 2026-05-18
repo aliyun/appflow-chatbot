@@ -12,6 +12,7 @@ import { DocReferences, DocReferenceItem } from './DocReferences';
 import { WebSearchPanel } from './WebSearchPanel';
 import { HumanVerify, HistoryCard, CustomParamSchema } from './HumanVerify';
 import { BubbleContent } from '@/core';
+import { useTranslation } from '@/i18n';
 
 /** HumanVerify 提交数据类型 */
 export interface HumanVerifySubmitData {
@@ -271,6 +272,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   historyCardData,
   onHumanVerifySubmit,
 }) => {
+  const { t } = useTranslation();
   const [modal, contextHolder] = Modal.useModal();
   
   // 网页搜索抽屉状态
@@ -293,7 +295,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
     modal.confirm({
       bodyStyle: { maxHeight: '80vh', overflow: 'auto' },
       icon: null,
-      title: '参考资料',
+      title: t('source.title'),
       destroyOnClose: true,
       maskClosable: true,
       closable: true,
@@ -317,7 +319,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
       ),
       footer: null,
     });
-  }, [modal]);
+  }, [modal, t]);
 
   // 默认的网页搜索点击处理
   const defaultWebSearchClick = useCallback((items: DocReferenceItem[]) => {

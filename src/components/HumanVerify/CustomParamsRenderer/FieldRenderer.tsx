@@ -7,6 +7,7 @@ import { EnumField } from './EnumField';
 import styled from 'styled-components';
 import TimeField from './TimeField';
 import FileField from './FileField';
+import { useTranslation } from '../../../i18n';
 
 
 // ==================== Styled Components ====================
@@ -130,7 +131,8 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
 }) => {
   const { Type, Title, Description } = schema;
   const displayTitle = Title || name;
-  
+  const { t } = useTranslation();
+
   // 获取 Ant Design 的 prefixCls 配置，自动继承用户项目的 ConfigProvider 设置
   // 使用 ConfigProvider.ConfigContext 获取完整配置
   const configContext = useContext(ConfigProvider.ConfigContext);
@@ -176,7 +178,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
               value={value}
               onChange={(e) => handleChange(e.target.value)}
               disabled={disabled}
-              placeholder={`请输入${displayTitle}`}
+              placeholder={t('humanVerify.placeholder.input', { title: displayTitle })}
             />
           </InputWrapper>
         );
@@ -189,7 +191,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
               onChange={handleChange}
               disabled={disabled}
               style={{ width: '100%' }}
-              placeholder={`请输入${displayTitle}`}
+              placeholder={t('humanVerify.placeholder.input', { title: displayTitle })}
             />
           </InputWrapper>
         );
@@ -307,7 +309,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({
               value={value}
               onChange={(e) => handleChange(e.target.value)}
               disabled={disabled}
-              placeholder={`请输入${displayTitle}`}
+              placeholder={t('humanVerify.placeholder.input', { title: displayTitle })}
             />
           </InputWrapper>
         );

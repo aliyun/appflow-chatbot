@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Button, message } from 'antd';
 import styled from 'styled-components';
 import CustomParamsRenderer, { validateCustomParams, UploadSender, FileUploader } from './CustomParamsRenderer';
+import { useTranslation } from '../../i18n';
 
 // ==================== Styled Components ====================
 
@@ -61,6 +62,7 @@ export const HumanVerify: React.FC<HumanVerifyProps> = ({
   fileUploader,
   onSubmit
 }) => {
+  const { t } = useTranslation();
   // 从 data 中提取需要的参数
   const verifyId = data?.verifyId;
   const sessionWebhook = data?.sessionWebhook;
@@ -110,7 +112,7 @@ export const HumanVerify: React.FC<HumanVerifyProps> = ({
         setValidationErrors(errors);
 
         // 提示用户
-        message.error('请填写所有必填项');
+        message.error(t('humanVerify.requiredAll'));
         return;
       }
 
@@ -143,7 +145,7 @@ export const HumanVerify: React.FC<HumanVerifyProps> = ({
       <StatusContainer $approved={approved}>
         <StatusContent>
           <StatusText>
-            {approved ? '已提交' : '待提交'}
+            {approved ? t('humanVerify.submitted') : t('humanVerify.pending')}
           </StatusText>
         </StatusContent>
         <Button 
@@ -152,7 +154,7 @@ export const HumanVerify: React.FC<HumanVerifyProps> = ({
           onClick={handleApprove}
           disabled={approved}
         >
-          {'提交'}
+          {t('common.submit')}
         </Button>
       </StatusContainer>
     </HumanVerifyContainer>

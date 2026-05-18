@@ -10,6 +10,8 @@ import {
   UploadFileResponse 
 } from './types';
 import styled from 'styled-components';
+import { useTranslation } from '../../../i18n';
+import { translate } from '../../../i18n';
 
 // ==================== Styled Components ====================
 
@@ -114,16 +116,17 @@ const getAcceptBySubTypes = (subTypes?: FileSubType[]): string => {
 
 /**
  * 根据文件子类型数组获取上传提示文本
+ * 使用全局 translate（非 hook 版本）以便在组件外调用
  */
 const getUploadHintBySubTypes = (subTypes?: FileSubType[]): string => {
   if (!subTypes || subTypes.length === 0) {
-    return '支持所有文件格式';
+    return translate('humanVerify.file.supportAll');
   }
-  
+
   if (subTypes.includes('default')) {
-    return '支持所有文件格式';
+    return translate('humanVerify.file.supportAll');
   }
-  
+
   const hintMap: Record<FileSubType, string> = {
     'jpg': 'JPG',
     'png': 'PNG',
@@ -134,11 +137,13 @@ const getUploadHintBySubTypes = (subTypes?: FileSubType[]): string => {
     'txt': 'TXT',
     'markdown': 'Markdown',
     'zip': 'ZIP/RAR/7Z',
-    'default': '所有格式',
+    'default': translate('humanVerify.file.supportAll'),
   };
-  
+
   const hints = subTypes.map(subType => hintMap[subType] || subType).filter(Boolean);
-  return hints.length > 0 ? `支持 ${hints.join('、')} 格式` : '支持所有文件格式';
+  return hints.length > 0
+    ? translate('humanVerify.file.supportFormats', { formats: hints.join('、') })
+    : translate('humanVerify.file.supportAll');
 };
 
 /**
@@ -164,6 +169,7 @@ export const FileField: React.FC<FileFieldProps> = ({
   uploadSender,
   fileUploader,
 }) => {
+  const { t } = useTranslation();
   // 优先从 AssociationPropertyMetadata.SubType 读取，兼容旧的 FileSubType 字段
   const subTypes = useMemo((): FileSubType[] => {
     const subTypeArray = schema.AssociationPropertyMetadata?.SubType;
@@ -190,7 +196,7 @@ export const FileField: React.FC<FileFieldProps> = ({
     if (Array.isArray(value)) {
       return value.map((file: any, index: number) => ({
         uid: file.uid || `${index}`,
-        name: file.name || `文件${index + 1}`,
+        name: file.name || `${t('humanVerify.file.defaultFileName')}${index + 1}`,
         status: 'done' as const,
         url: file.url,
         ...file,
@@ -199,7 +205,7 @@ export const FileField: React.FC<FileFieldProps> = ({
     if (typeof value === 'object') {
       return [{
         uid: value.uid || '0',
-        name: value.name || '文件',
+        name: value.name || t('humanVerify.file.defaultFileName'),
         status: 'done' as const,
         url: value.url,
         ...value,
@@ -227,7 +233,7 @@ export const FileField: React.FC<FileFieldProps> = ({
    */
   const getUploadToken = useCallback(async (fileName: string): Promise<UploadTokenResponse | null> => {
     if (!uploadSender) {
-      message.error('上传功能未配置');
+      message.error(t('humanVerify.file.uploaderNotConfigured'));
       return null;
     }
 
@@ -238,7 +244,7 @@ export const FileField: React.FC<FileFieldProps> = ({
       });
 
       if (!response) {
-        message.error('获取上传凭证失败');
+        message.error(t('humanVerify.file.tokenFailed'));
         return null;
       }
 
@@ -255,14 +261,14 @@ export const FileField: React.FC<FileFieldProps> = ({
         return parsedResponse as UploadTokenResponse;
       }
       
-      message.error('获取上传凭证失败');
+      message.error(t('humanVerify.file.tokenFailed'));
       return null;
     } catch (error) {
-      console.error('获取上传凭证失败:', error);
-      message.error('获取上传凭证失败');
+      console.error(t('humanVerify.file.tokenFailed'), error);
+      message.error(t('humanVerify.file.tokenFailed'));
       return null;
     }
-  }, [uploadSender]);
+  }, [uploadSender, t]);
 
   /**
    * 获取文件 ID（文件上传专用）
@@ -298,10 +304,10 @@ export const FileField: React.FC<FileFieldProps> = ({
       
       return null;
     } catch (error) {
-      console.error('获取文件ID失败:', error);
+      console.error(t('humanVerify.file.getFileIdFailed'), error);
       return null;
     }
-  }, [uploadSender]);
+  }, [uploadSender, t]);
 
   /**
    * 图片上传处理
@@ -311,12 +317,12 @@ export const FileField: React.FC<FileFieldProps> = ({
     // 1. 获取预签名 URL
     const tokenResponse = await getUploadToken(file.name);
     if (!tokenResponse) {
-      throw new Error('获取上传凭证失败');
+      throw new Error(t('humanVerify.file.tokenFailed'));
     }
 
     // 2. 上传文件到 OSS
     if (!fileUploader) {
-      throw new Error('文件上传方法未配置');
+      throw new Error(t('humanVerify.file.uploadMethodNotConfigured'));
     }
     const blob = new Blob([file]);
     await fileUploader(blob, tokenResponse.uploadUrl);
@@ -329,7 +335,7 @@ export const FileField: React.FC<FileFieldProps> = ({
       type: file.type,
       size: file.size,
     };
-  }, [getUploadToken, fileUploader]);
+  }, [getUploadToken, fileUploader, t]);
 
   /**
    * 文件上传处理
@@ -339,12 +345,12 @@ export const FileField: React.FC<FileFieldProps> = ({
     // 1. 获取预签名 URL
     const tokenResponse = await getUploadToken(file.name);
     if (!tokenResponse) {
-      throw new Error('获取上传凭证失败');
+      throw new Error(t('humanVerify.file.tokenFailed'));
     }
 
     // 2. 上传文件到 OSS
     if (!fileUploader) {
-      throw new Error('文件上传方法未配置');
+      throw new Error(t('humanVerify.file.uploadMethodNotConfigured'));
     }
     const blob = new Blob([file]);
     await fileUploader(blob, tokenResponse.uploadUrl);
@@ -362,7 +368,7 @@ export const FileField: React.FC<FileFieldProps> = ({
       size: file.size,
       fileType: file.name.split('.').pop(),
     };
-  }, [getUploadToken, fileUploader, getFileId]);
+  }, [getUploadToken, fileUploader, getFileId, t]);
 
   /**
    * 自定义上传逻辑
@@ -379,7 +385,7 @@ export const FileField: React.FC<FileFieldProps> = ({
           onSuccess?.({ url }, new XMLHttpRequest());
         } catch (error) {
           onError?.(error as Error);
-          message.error('文件上传失败');
+          message.error(t('humanVerify.file.uploadFailed'));
         }
         return;
       }
@@ -399,12 +405,12 @@ export const FileField: React.FC<FileFieldProps> = ({
         onSuccess?.(result, new XMLHttpRequest());
       } catch (error) {
         onError?.(error as Error);
-        message.error('文件上传失败');
+        message.error(t('humanVerify.file.uploadFailed'));
       } finally {
         setUploading(false);
       }
     },
-    [uploadSender, fileUploader, isImage, handleImageUpload, handleFileUpload]
+    [uploadSender, fileUploader, isImage, handleImageUpload, handleFileUpload, t]
   );
 
   // 处理文件变化
@@ -440,19 +446,21 @@ export const FileField: React.FC<FileFieldProps> = ({
       // 文件大小限制（默认 10MB）
       const maxSize = 10 * 1024 * 1024;
       if (file.size > maxSize) {
-        message.error('文件大小不能超过 10MB');
+        message.error(t('humanVerify.file.maxSizeError', { size: '10MB' }));
         return Upload.LIST_IGNORE;
       }
       return true;
     },
-    []
+    [t]
   );
 
   // 上传按钮的加载指示器
   const uploadButton = (
     <div>
       {uploading ? <LoadingOutlined /> : <PlusOutlined />}
-      <div style={{ marginTop: 8 }}>{uploading ? '上传中' : '上传'}</div>
+      <div style={{ marginTop: 8 }}>
+        {uploading ? t('humanVerify.file.uploading') : t('humanVerify.file.upload')}
+      </div>
     </div>
   );
 
@@ -498,7 +506,7 @@ export const FileField: React.FC<FileFieldProps> = ({
           disabled={disabled || uploading}
           loading={uploading}
         >
-          {uploading ? '上传中' : '选择文件'}
+          {uploading ? t('humanVerify.file.uploading') : t('humanVerify.file.uploadButton')}
         </Button>
       </Upload>
       <FileHint>{hint}</FileHint>

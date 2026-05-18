@@ -3,6 +3,7 @@ import { Button, Input, InputNumber, Switch, Space } from 'antd';
 import { PlusOutlined, MinusOutlined } from '@ant-design/icons';
 import { ArrayFieldProps, CustomParamSchema, FileSubType, sortPropertiesByOrder } from './types';
 import styled from 'styled-components';
+import { useTranslation } from '../../../i18n';
 
 // 图片类型列表
 const IMAGE_TYPES: FileSubType[] = ['jpg', 'png', 'svg'];
@@ -191,7 +192,8 @@ export const ArrayField: React.FC<ArrayFieldProps> = ({
 }) => {
   const { Title, Description, Items } = schema;
   const displayTitle = Title || name;
-  
+  const { t } = useTranslation();
+
   // 计算当前数组的完整路径
   const currentPath = fieldPath ? `${fieldPath}.${name}` : name;
 
@@ -370,7 +372,7 @@ export const ArrayField: React.FC<ArrayFieldProps> = ({
     return sortedProperties.map(([propertyName, propertySchema]) => {
       const isRequired = itemRequired.includes(propertyName);
       return (
-        <React.Suspense key={propertyName} fallback={<div>加载中...</div>}>
+        <React.Suspense key={propertyName} fallback={<div>{t('common.loading')}</div>}>
           <FieldRenderer
             name={propertyName}
             schema={propertySchema}
@@ -392,7 +394,7 @@ export const ArrayField: React.FC<ArrayFieldProps> = ({
   // 渲染嵌套数组类型的数组项
   const renderArrayItemContent = (item: any, index: number) => {
     return (
-      <React.Suspense fallback={<div>加载中...</div>}>
+      <React.Suspense fallback={<div>{t('common.loading')}</div>}>
         <FieldRenderer
           name={`${name}[${index}]`}
           schema={Items}
@@ -412,7 +414,7 @@ export const ArrayField: React.FC<ArrayFieldProps> = ({
   // 渲染复杂类型的数组项（file、time、带枚举的类型）
   const renderComplexItemContent = (item: any, index: number) => {
     return (
-      <React.Suspense fallback={<div>加载中...</div>}>
+      <React.Suspense fallback={<div>{t('common.loading')}</div>}>
         <FieldRenderer
           name={`[${index}]`}
           schema={Items}

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import loadMermaidScript from '@/utils/loadMermaid';
+import { useTranslation } from '@/i18n';
 
 interface IProps {
   code: string;
@@ -37,6 +38,7 @@ const isMermaidCodeComplete = (code: string): boolean => {
 };
 
 export const Mermaid: React.FC<IProps> = ({ code }) => {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [svg, setSvg] = useState<string>('');
   const [error, setError] = useState<string>('');
@@ -55,7 +57,7 @@ export const Mermaid: React.FC<IProps> = ({ code }) => {
         setIsMermaidLoaded(true);
       } catch (error) {
         console.error('mermaid加载失败:', error);
-        setError('Mermaid 库加载失败');
+        setError(t('markdown.mermaidLoadFailed'));
         setIsLoading(false);
       }
     };
@@ -78,7 +80,7 @@ export const Mermaid: React.FC<IProps> = ({ code }) => {
 
     const mermaid = (window as any).mermaid;
     if (!mermaid) {
-      setError('Mermaid 未正确加载');
+      setError(t('markdown.mermaidNotLoaded'));
       setIsLoading(false);
       return;
     }
@@ -143,7 +145,7 @@ export const Mermaid: React.FC<IProps> = ({ code }) => {
         } else {
           // 流式输出结束后，如果仍然有错误，才显示错误
           console.error('Mermaid 渲染错误:', err);
-          setError(err?.message || 'Mermaid 图表渲染失败');
+          setError(err?.message || t('markdown.mermaidRenderFailed'));
         }
       } finally {
         setIsLoading(false);
@@ -176,7 +178,7 @@ export const Mermaid: React.FC<IProps> = ({ code }) => {
           marginBottom: '10px',
         }}
       >
-        图表加载中...
+        {t('markdown.chartLoading')}
       </div>
     );
   }
@@ -202,7 +204,7 @@ export const Mermaid: React.FC<IProps> = ({ code }) => {
             marginBottom: '8px'
           }}
         >
-          Mermaid 图表渲染失败
+          {t('markdown.mermaidRenderFailed')}
         </div>
         <div 
           style={{ 
@@ -238,7 +240,7 @@ export const Mermaid: React.FC<IProps> = ({ code }) => {
           marginBottom: '10px',
         }}
       >
-        图表加载中...
+        {t('markdown.chartLoading')}
       </div>
     );
   }

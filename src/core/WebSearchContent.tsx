@@ -6,6 +6,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { Drawer, List, Typography } from 'antd';
 import { CloseOutlined } from '@ant-design/icons';
+import { useTranslation } from '../i18n';
 
 const { Title } = Typography;
 
@@ -136,6 +137,7 @@ export const WebSearchContent: React.FC<WebSearchContentProps> = ({
   className,
   style,
 }) => {
+  const { t } = useTranslation();
   // 判断是否移动端
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 500;
   const panelWidth = isMobile ? '100%' : width;
@@ -174,7 +176,7 @@ export const WebSearchContent: React.FC<WebSearchContentProps> = ({
       <StyledContainer $isMobile={isMobile}>
         <StyledContent>
           <StyledHeader>
-            <Title level={5} style={{ margin: 0 }}>搜索结果</Title>
+            <Title level={5} style={{ margin: 0 }}>{t('webSearch.title')}</Title>
             <StyledCloseButton onClick={handleClose}>
               <CloseOutlined />
             </StyledCloseButton>

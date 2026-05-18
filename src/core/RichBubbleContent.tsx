@@ -19,6 +19,7 @@ import { Collapse } from 'antd';
 import { MarkdownView } from '../markdown';
 import { convertTableDataToMarkdown, processStepContent } from '../markdown/utils/dataProcessor';
 import { RichBubbleProvider } from '../context/RichBubble';
+import { useTranslation } from '../i18n';
 
 export interface RichBubbleContentProps {
   /** 消息内容 */
@@ -110,6 +111,7 @@ export const RichBubbleContent: React.FC<RichBubbleContentProps> = ({
   children,
   waitingMessage,
 }) => {
+  const { t } = useTranslation();
   // step消息折叠面板激活的索引
   const [activeKey, setActiveKey] = useState<string | string[]>([]);
 
@@ -150,7 +152,7 @@ export const RichBubbleContent: React.FC<RichBubbleContentProps> = ({
     } else {
       const contentToRender = detail || '';
       if (!contentToRender) {
-        return <StyledStepContent>暂无内容</StyledStepContent>;
+        return <StyledStepContent>{t('rich.emptyContent')}</StyledStepContent>;
       }
 
       return (
@@ -250,7 +252,7 @@ export const RichBubbleContent: React.FC<RichBubbleContentProps> = ({
                     <StyledStatusIcon $success={status === 'Success'}>
                       {status === 'Success' ? '✓' : '⟳'}
                     </StyledStatusIcon>
-                    <StyledStepNumber>步骤{index + 1}:</StyledStepNumber>
+                    <StyledStepNumber>{t('rich.stepLabel', { index: index + 1 })}</StyledStepNumber>
                     <StyledStepText>{itemContent?.title}</StyledStepText>
                   </StyledStepTitleWrapper>
                 ),
