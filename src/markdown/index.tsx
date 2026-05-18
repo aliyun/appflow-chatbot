@@ -53,9 +53,28 @@ export const MarkdownView: React.FC<MarkdownViewProps> = ({
           />
         );
       },
-      code: ({ node, className, ...props }: any) => {
+      code: ({ node, inline, className, ...props }: any) => {
+        // 判断是否为行内代码
+        // 行内代码没有 className，且 inline 为 true
+        const isInline = inline || (!className && !node?.properties?.className);
+        
+        if (isInline) {
+          // 行内代码 - 使用简单的 <code> 标签样式
+          return (
+            <code style={{
+              backgroundColor: 'rgba(175, 184, 193, 0.2)',
+              padding: '0.2em 0.4em',
+              borderRadius: '3px',
+              fontSize: '85%',
+              fontFamily: 'Consolas, Monaco, "Andale Mono", monospace',
+            }}>
+              {props.children}
+            </code>
+          );
+        }
+
         // 元信息中解析语言类型
-        const languageType = /language-(\w+)/.exec(node?.properties?.className || '')?.[0];
+        const languageType = /language-(\w+)/.exec(node?.properties?.className || className || '')?.[0];
         const langFromMeta = node?.position?.start?.line === 2 ? 'language-file' : null;
         const finalLang = languageType || langFromMeta;
 

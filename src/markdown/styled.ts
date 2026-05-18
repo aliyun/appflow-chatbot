@@ -9,7 +9,12 @@ export const StyledContentRender = styled.div<{
 }>`
     position: relative;
   
+    max-width: 100%;
+    overflow-wrap: break-word;
+    
     > p {
+        display: block;
+        width: 100%;
         margin-bottom: 16px;
     }
   

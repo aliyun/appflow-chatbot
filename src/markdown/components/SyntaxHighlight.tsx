@@ -94,7 +94,6 @@ export const ASyntaxHighLight: React.FC<ASyntaxHighLightProps> = ({
   return (
     <div style={{ position: 'relative', ...style }}>
       <pre 
-        className="line-numbers"
         style={{
           margin: 0,
           padding: '1em',
@@ -109,7 +108,6 @@ export const ASyntaxHighLight: React.FC<ASyntaxHighLightProps> = ({
       >
         {/* 行号 */}
         <span 
-          className="line-numbers-rows"
           style={{
             position: 'absolute',
             left: 0,
