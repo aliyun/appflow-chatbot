@@ -45,8 +45,8 @@ export const MarkdownView: React.FC<MarkdownViewProps> = ({
         return (
           <Image
             style={{
-              maxWidth: '200px',
-              maxHeight: '150px',
+              maxWidth: '100%',
+              maxHeight: '300px',
               objectFit: 'contain',
             }}
             src={props.src}
