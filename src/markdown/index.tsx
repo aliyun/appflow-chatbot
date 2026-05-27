@@ -46,8 +46,7 @@ export const MarkdownView: React.FC<MarkdownViewProps> = ({
           <Image
             style={{
               maxWidth: '100%',
-              maxHeight: '300px',
-              objectFit: 'contain',
+              maxHeight: '600px',
             }}
             src={props.src}
             alt={props.alt}
@@ -176,9 +175,8 @@ export const MarkdownView: React.FC<MarkdownViewProps> = ({
             <>
               <Image
                 style={{
-                  maxWidth: '200px',
-                  maxHeight: '150px',
-                  objectFit: 'contain',
+                  maxWidth: '100%',
+                  maxHeight: '600px',
                 }}
                 src={image.properties.src}
                 className="max-w-full h-auto align-middle border-none rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 ease-in-out mt-2 mb-2"
