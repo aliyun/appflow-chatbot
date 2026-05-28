@@ -274,7 +274,7 @@ export const SourceContent: React.FC<SourceContentProps> = ({
           <StyledWrapSpace>
             {uniqueImages.map((image, index) => (
               <StyledImageBox key={index}>
-                <Image src={image} width={50} height={50} preview={{ zIndex: 1100 }}/>
+                <Image src={image} width={50} height={50} referrerPolicy="no-referrer" preview={{ zIndex: 1100 }}/>
               </StyledImageBox>
             ))}
           </StyledWrapSpace>
