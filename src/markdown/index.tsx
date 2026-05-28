@@ -50,6 +50,7 @@ export const MarkdownView: React.FC<MarkdownViewProps> = ({
             }}
             src={props.src}
             alt={props.alt}
+            referrerPolicy="no-referrer"
             preview={{ zIndex: 1100 }}
           />
         );
@@ -181,6 +182,7 @@ export const MarkdownView: React.FC<MarkdownViewProps> = ({
                 src={image.properties.src}
                 className="max-w-full h-auto align-middle border-none rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 ease-in-out mt-2 mb-2"
                 alt={image.properties.alt}
+                referrerPolicy="no-referrer"
                 preview={{ zIndex: 1100 }}
               />
               {isSlice && <p>

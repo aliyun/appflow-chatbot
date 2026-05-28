@@ -310,7 +310,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             <div style={{ borderRadius: '4px', backgroundColor: '#f0f2f5', padding: '8px' }}>
               <StyledWrapSpace>
                 {images.map((url, index) => (
-                  <Image key={index} src={url} height={50} />
+                  <Image key={index} src={url} height={50} referrerPolicy="no-referrer" />
                 ))}
               </StyledWrapSpace>
             </div>
