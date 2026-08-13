@@ -3,7 +3,6 @@ import ReactMarkdown, { Options } from 'react-markdown';
 import remarkMath from 'remark-math';
 import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
-import { Image } from 'antd';
 import { ASyntaxHighLight } from './components/SyntaxHighlight';
 import rehypeRaw from 'rehype-raw';
 import remarkBreaks from 'remark-breaks';
@@ -14,6 +13,7 @@ import { convertTableDataToMarkdown } from './utils/dataProcessor';
 import Loading from './components/Loading';
 import Error from './components/Error';
 import Mermaid from './components/Mermaid';
+import MediaRender from './components/MediaRender';
 import { useTranslation } from '@/i18n';
 
 export interface MarkdownViewProps {
@@ -42,18 +42,7 @@ export const MarkdownView: React.FC<MarkdownViewProps> = ({
     components: {
       // 自定义组件渲染
       img: ({ node, ...props }: any) => {
-        return (
-          <Image
-            style={{
-              maxWidth: '100%',
-              maxHeight: '600px',
-            }}
-            src={props.src}
-            alt={props.alt}
-            referrerPolicy="no-referrer"
-            preview={{ zIndex: 1100 }}
-          />
-        );
+        return <MediaRender src={props.src} alt={props.alt} />;
       },
       code: ({ node, inline, className, ...props }: any) => {
         // 判断是否为行内代码
@@ -174,16 +163,10 @@ export const MarkdownView: React.FC<MarkdownViewProps> = ({
 
           return (
             <>
-              <Image
-                style={{
-                  maxWidth: '100%',
-                  maxHeight: '600px',
-                }}
+              <MediaRender
                 src={image.properties.src}
-                className="max-w-full h-auto align-middle border-none rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 ease-in-out mt-2 mb-2"
                 alt={image.properties.alt}
-                referrerPolicy="no-referrer"
-                preview={{ zIndex: 1100 }}
+                className="max-w-full h-auto align-middle border-none rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 ease-in-out mt-2 mb-2"
               />
               {isSlice && <p>
                 {paragraph?.children?.slice(1)}
